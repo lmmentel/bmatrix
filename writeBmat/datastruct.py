@@ -27,6 +27,8 @@ class Linesearch:
    self.status='u'
    self.cg=None
 
+# TODO:  what are the units of the radii and what is mendelejev?
+
 class Elementprop:
   def __init__(self):
     self.covalentradii={'ru': 1.5, 're': 1.55, 'ra': 2.100, 'rb': 1.670, 'rn': 0.200, 'rh': 1.650,\
