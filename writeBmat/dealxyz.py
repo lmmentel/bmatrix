@@ -4,7 +4,8 @@ from math import *
 import mymath,various
 
 class Dealxyz:
-  """from cartesians and given reciept (intwhat, intwhere) and
+  """
+  from cartesians and given reciept (intwhat, intwhere) and
   lattice vectors (lattmat) calculates values of internal
   coordinates
   """

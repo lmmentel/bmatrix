@@ -2,11 +2,13 @@ from numpy.oldnumeric import *
 from numpy.oldnumeric.linear_algebra import *
 from math import *
 import mymath
-import datastruct,physconstants
+import datastruct
+import physconstants
 
 
 class Intern:
- """Identification of primitive internal coordinates.
+ """
+ Identification of primitive internal coordinates.
  """
 
  def __init__(self,WATOMS,atradii_,ASCALE,BSCALE,ANGLECRIT,TORSIONCRIT,FRAGCOORD,RELAX,TORS,SUBST,numofatoms,lattmat,directs,cartesian,types):
