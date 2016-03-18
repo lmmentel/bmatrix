@@ -1,4 +1,5 @@
 
+from __future__ import print_function, division
 import argparse
 import ConfigParser
 import os
@@ -17,7 +18,7 @@ def create_parser():
 
     parser.add_argument('filename', help='Name of the file with coordianates')
 
-    parser.add_argument('--config-file',
+    parser.add_argument('--config',
                         default='INPDAT',
                         type=str,
                         help='configuration/input file')
@@ -188,6 +189,27 @@ def parse_args(parser):
 
     args = parser.parse_args()
 
+    if os.path.exists(args.config):
+
+        config = ConfigParser.SafeConfigParser()
+        config.read(args.config)
+        defaults = dict(config.items("default"))
+
+        arg_dict = args.__dict__
+        for key, value in defaults.items():
+            if isinstance(value, list):
+                arg_dict[key].extend(value)
+            else:
+                arg_dict[key] = type(arg_dict[key])(value)
+
+        if 'atomic radii' in config.sections():
+            atradii = dict(config.items("atomic radii"))
+        else:
+            atradii = {}
+    else:
+        print('Configuration file: {} not found, uning defaults.'.format(args.config))
+
+    args.atradii = atradii
     args.cscale = args.cscale if args.cscale else args.ascale
 
     if args.hupdim < 2:
@@ -208,18 +230,4 @@ def parse_args(parser):
     args.homeaddress = os.getcwd()
     args.compaddress = os.getcwd()
 
-    if args.config_file:
-
-        config = ConfigParser.SafeConfigParser()
-        config.read(args.config_file)
-        defaults = dict(config.items("default"))
-
-        #TODO: add parsing for a section with atomic/covalent radii into a symbol:radii dict
-
-        arg_dict = args.__dict__
-        for key, value in defaults.items():
-            if isinstance(value, list):
-                arg_dict[key].extend(value)
-            else:
-                arg_dict[key] = value
     return args
