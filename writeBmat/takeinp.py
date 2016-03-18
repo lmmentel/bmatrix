@@ -4,7 +4,7 @@ from numpy.oldnumeric import *
 from numpy.oldnumeric.linear_algebra import *
 from math import *
 import re
-import physconstants
+from physconstants import physical_constants as pC
 
 class ParseException:
   "This exception is thrown when parsing-error occures."
@@ -173,14 +173,13 @@ class TakeInput:
    self.volume=abs(determinant(self.lattmat))
    
  def convert_to_au(self):
-   pC=physconstants.physConstants()
-   self.lattmat/=pC.AU2A
+   self.lattmat/=pC['AU2A']
    self.lattinv=inverse(self.lattmat)
    self.volume=abs(determinant(self.lattmat))
-   self.coords_c/=pC.AU2A
-   self.energy/=pC.Hartree2eV
-   self.stress/=pC.Hartree2eV
-   self.gradients*=pC.AU2A/pC.Hartree2eV
+   self.coords_c/=pC['AU2A']
+   self.energy/=pC['Hartree2eV']
+   self.stress/=pC['Hartree2eV']
+   self.gradients*=pC['AU2A']/pC['Hartree2eV']
  
  
 #out=TakeInput()

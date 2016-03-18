@@ -3,7 +3,8 @@ from numpy.oldnumeric.linear_algebra import *
 from math import *
 import mymath
 import datastruct
-import physconstants
+
+from physconstants import physical_constants as pC
 
 
 class Intern:
@@ -12,8 +13,8 @@ class Intern:
  """
 
  def __init__(self,WATOMS,atradii_,ASCALE,BSCALE,ANGLECRIT,TORSIONCRIT,FRAGCOORD,RELAX,TORS,SUBST,numofatoms,lattmat,directs,cartesian,types):
-   pC=physconstants.physConstants()
-   ASCALE=ASCALE/pC.AU2A
+ 
+   ASCALE=ASCALE/pC['AU2A']
    ###COVALENTRADII=datastruct.Elementprop().covalentradii
    self.trust=0.15 #criteria for acceptance of angle
 

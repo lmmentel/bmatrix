@@ -3,8 +3,9 @@ from fpformat import *
 import string
 #import cPickle as pickle
 import pickle
-import various,physconstants,mymath
+import various,mymath
 
+from physconstants import physical_constants as pC
 
 def write_whatwhere(coords,fname):
   wfile=open(fname,'w')
@@ -158,9 +159,8 @@ def write_poscar(filename,cartcoords1,lattmat_,inpt):
   cartcoords3=various.format_change(cartcoords1)
   fractcoords3=mymath.cart_dir(lattmat_,cartcoords3)
   #fractcoords3=dot(cartcoords3,inverse(lattmat_))
-  pC=physconstants.physConstants()
-  lattmat=lattmat_*pC.AU2A
-  #cartcoords3=cartcoords3*pC.AU2A
+  lattmat=lattmat_*pC['AU2A']
+  #cartcoords3=cartcoords3*pC['AU2A']
   
   kkk=open(filename,'w')
   kkk.write(inpt.comment+'\n')
