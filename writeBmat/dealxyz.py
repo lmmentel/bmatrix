@@ -1,7 +1,6 @@
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
 from math import *
 import mymath,various
+import numpy as np
 
 class Dealxyz:
   """
@@ -69,15 +68,15 @@ class Dealxyz:
      elif coords[i].dtyp=='cn':
        internal=self.set_cnum(cart,coords[i],lattmat)
      self.internals.append(internal)
-    self.internals=array(self.internals)
+    self.internals=np.array(self.internals)
 
   def set_lengths(self,cart,what,where,lattmat):
     """Calculates bonds.
     """
     index1=what[0]
     index2=what[1]
-    a=cart[index1]+matrixmultiply(where[0],lattmat)
-    b=cart[index2]+matrixmultiply(where[1],lattmat)
+    a=cart[index1]+np.dot(where[0],lattmat)
+    b=cart[index2]+np.dot(where[1],lattmat)
     bond=(sum((a-b)**2))**0.5
     return bond
 
@@ -88,10 +87,10 @@ class Dealxyz:
     index2=what[1]
     index3=what[2]
 
-    a=cart[index1]+matrixmultiply(where[0],lattmat)
-    b=cart[index2]+matrixmultiply(where[1],lattmat)
-    #c=cart[index3]+matrixmultiply(where[1],lattmat)+matrixmultiply(where[2],lattmat)
-    c=cart[index3]+matrixmultiply(where[2],lattmat)
+    a=cart[index1]+np.dot(where[0],lattmat)
+    b=cart[index2]+np.dot(where[1],lattmat)
+    #c=cart[index3]+np.dot(where[1],lattmat)+np.dot(where[2],lattmat)
+    c=cart[index3]+np.dot(where[2],lattmat)
     m=(b+c)/2
     bond=(sum((a-m)**2))**0.5
     return bond
@@ -108,9 +107,9 @@ class Dealxyz:
     index1=what[0]
     index2=what[1]
     index3=what[2]
-    a=cart[index1]+matrixmultiply(where[0],lattmat)
+    a=cart[index1]+np.dot(where[0],lattmat)
     b=cart[index2]
-    c=cart[index3]+matrixmultiply(where[2],lattmat)
+    c=cart[index3]+np.dot(where[2],lattmat)
     vector1=a-b
     vector2=c-b
     size1=mymath.vector_size(vector1)
@@ -128,10 +127,10 @@ class Dealxyz:
     index2=what[1]
     index3=what[2]
     index4=what[3]
-    a=cart[index1]+matrixmultiply(where[0],lattmat)
+    a=cart[index1]+np.dot(where[0],lattmat)
     b=cart[index2]
-    c=cart[index3]+matrixmultiply(where[2],lattmat)
-    d=cart[index4]+matrixmultiply(where[3],lattmat)
+    c=cart[index3]+np.dot(where[2],lattmat)
+    d=cart[index4]+np.dot(where[3],lattmat)
     vector1=a-b
     vector2=b-c
     vector3=c-d
@@ -153,10 +152,10 @@ class Dealxyz:
     index2=what[1]
     index3=what[2]
     index4=what[3]
-    a=cart[index1]+matrixmultiply(where[0],lattmat)
-    b=cart[index2]+matrixmultiply(where[1],lattmat)
-    c=cart[index3]+matrixmultiply(where[2],lattmat)
-    d=cart[index4]+matrixmultiply(where[3],lattmat)
+    a=cart[index1]+np.dot(where[0],lattmat)
+    b=cart[index2]+np.dot(where[1],lattmat)
+    c=cart[index3]+np.dot(where[2],lattmat)
+    d=cart[index4]+np.dot(where[3],lattmat)
     vector1=b-a
     vector2=c-a
     vector3=d-a
@@ -177,7 +176,7 @@ class Dealxyz:
   def set_fsingles(self,cart,xyz,what,lattmat):
     index=what[0]
     x=cart[index]
-    x=matrixmultiply(x,inverse(lattmat))
+    x=np.dot(x, np.linalg.inv(lattmat))
     internal=x[xyz]
     return internal
   
@@ -305,7 +304,7 @@ class Dealxyz:
       complexcoord+=(coord.coefs[i]*dist)**2
     complexcoord=complexcoord**0.5
     return complexcoord
-    
+
   def set_cnum(self,cart,coord,lattmat):
     complexcoord=0.0
     for i in range(len(coord.tag)):
@@ -317,19 +316,3 @@ class Dealxyz:
           if abs(dummyq-1.0)<1e-4: dummyq=1.0001
           complexcoord=complexcoord+(1.0-dummyq**9.)/(1.0-dummyq**14.)
     return complexcoord
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
