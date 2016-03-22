@@ -1,6 +1,6 @@
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
 from math import *
+
+import numpy as np
 
 def vector_size(vector):
    """calculates the size of the vector, 
@@ -16,22 +16,22 @@ def cross_product(a,b):
    x=a[1]*b[2]-b[1]*a[2]
    y=a[2]*b[0]-b[2]*a[0]
    z=a[0]*b[1]-b[0]*a[1]
-   return array([x,y,z])
+   return np.array([x,y,z])
 
 def mygeneralized_inverse(matrix):
   try:
-    val,vect=Heigenvectors(matrix)
-  except LinAlgError:
+    val, vect = np.linalg.eigh(matrix)
+  except np.linalg.LinAlgError:
   #except  LinearAlgebraError:
-    invmatrix=inverse(matrix)
+    invmatrix = np.linalg.inv(matrix)
   else:
     dim=len(matrix)
-    invmatrix=zeros((dim,dim),Float)
+    invmatrix = np.zeros((dim,dim), dtype=float)
     for i in range(dim):
       if abs(val[i])>1e-7:
         invmatrix[i][i]=1/val[i]
-    invmatrix=matrixmultiply(transpose(vect),invmatrix)
-    invmatrix=matrixmultiply(invmatrix,vect)
+    invmatrix=np.dot(np.transpose(vect),invmatrix)
+    invmatrix=np.dot(invmatrix,vect)
   return invmatrix
 
 
@@ -48,7 +48,7 @@ def normalize_matrow(matrix):
 def build_umat(rank):
  """builds up a unit matrix of a given rank
  """
- matrix=zeros((rank,rank),Float)
+ matrix=np.zeros((rank,rank),dtype=float)
  for i in range(rank):
    matrix[i][i]=1.0
  return matrix
@@ -67,7 +67,7 @@ def orthonormalize_mat(matrix):
       i=sizes[j]
       for k in range(0,j):
         l=sizes[k]
-        matrix[i]=matrix[i]-innerproduct(matrix[i],matrix[l])*matrix[l]
+        matrix[i]=matrix[i] - np.inner(matrix[i],matrix[l])*matrix[l]
 	norm=vector_size(matrix[i])
 	if norm>1e-05:
           matrix[i]=matrix[i]/norm
@@ -81,9 +81,9 @@ def remove_zrows(matrix):
   for i in range(len(matrix)):
     if vector_size(matrix[i])>1e-06:
       newmatrix.append(matrix[i])
-  newmatrix=array(newmatrix)
+  newmatrix = np.array(newmatrix)
   return newmatrix
-  
+ 
 def de_cycle(prims1,prims2,coords):
   for m in range(len(coords)):
     if coords[m].dtyp=='simple':
@@ -121,15 +121,15 @@ def dir_cart(lvect,dirs):
   """transforms fractional coordinates
   to cartesians
   """
-  carts=matrixmultiply(dirs,lvect)
+  carts=np.dot(dirs,lvect)
   return carts
 
 def cart_dir(lvect,carts):
   """transforms cartesian coordinates
   to fractional
   """
-  m=inverse(lvect)
-  direct=matrixmultiply(carts,m)
+  m = np.linalg.inv(lvect)
+  direct=np.dot(carts,m)
   for i in range(len(direct)):
     for j in range(3):
       while direct[i][j]>1:
@@ -145,9 +145,9 @@ def cd_transmatrix(lvect,dim):
   """B-matrix for cartesian
   coordinates
   """
-  transmat=zeros((dim,dim),Float)
+  transmat=np.zeros((dim,dim),dtype=float)
   for i in range(dim/3):
-    transmat[3*i:3*i+3,3*i:3*i+3]=transpose(lvect)
+    transmat[3*i:3*i+3,3*i:3*i+3]=np.transpose(lvect)
   return transmat
 
 def sym_threemat(mat):
@@ -157,31 +157,31 @@ def sym_threemat(mat):
   err=1.0
   while err>1e-5:
     alpha=atan((mat[1,0]-mat[0,1])/(mat[0,0]+mat[1,1]))
-    mat_a=zeros((3,3),Float)
+    mat_a=np.zeros((3,3),dtype=float)
     mat_a[0,0]=cos(alpha)
     mat_a[1,1]=cos(alpha)
     mat_a[2,2]=1.0
     mat_a[0,1]=sin(alpha)
     mat_a[1,0]=-sin(alpha)
-    mat=matrixmultiply(mat,mat_a)
+    mat=np.dot(mat,mat_a)
 
     betha=atan((mat[2,0]-mat[0,2])/(mat[0,0]+mat[2,2]))
-    mat_b=zeros((3,3),Float)
+    mat_b=np.zeros((3,3),dtype=float)
     mat_b[0,0]=cos(betha)
     mat_b[2,2]=cos(betha)
     mat_b[1,1]=1.0
     mat_b[0,2]=sin(betha)
     mat_b[2,0]=-sin(betha)
-    mat=matrixmultiply(mat,mat_b)
+    mat=np.dot(mat,mat_b)
 
     gamma=atan((mat[2,1]-mat[1,2])/(mat[1,1]+mat[2,2]))
-    mat_c=zeros((3,3),Float)
+    mat_c=np.zeros((3,3),dtype=float)
     mat_c[1,1]=cos(gamma)
     mat_c[2,2]=cos(gamma)
     mat_c[0,0]=1.0
     mat_c[1,2]=sin(gamma)
     mat_c[2,1]=-sin(gamma)
-    mat=matrixmultiply(mat,mat_c)
+    mat=np.dot(mat,mat_c)
 
     err1=abs(mat[0,1]-mat[1,0])
     err2=abs(mat[2,0]-mat[0,2])
@@ -191,14 +191,14 @@ def sym_threemat(mat):
   return mat
 
 def regr_two(x,y):
-  Xmat=zeros((len(x),3),Float)
+  Xmat=np.zeros((len(x),3),dtype=float)
   for i in range(len(Xmat)):
     Xmat[i]=[1,x[i],x[i]**2]
-  Xtrans=transpose(Xmat)
-  Bmat=matrixmultiply(Xtrans,Xmat)
-  Binv=inverse(Bmat)
-  cvect=matrixmultiply(Binv,Xtrans)
-  cvect=matrixmultiply(cvect,transpose(y))
+  Xtrans=np.transpose(Xmat)
+  Bmat=np.dot(Xtrans,Xmat)
+  Binv=np.linalg.inv(Bmat)
+  cvect=np.dot(Binv,Xtrans)
+  cvect=np.dot(cvect,np.transpose(y))
   return cvect
 
 
