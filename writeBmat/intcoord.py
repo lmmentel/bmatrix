@@ -1,8 +1,8 @@
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
 from math import *
 import mymath
 import datastruct
+
+import numpy as np
 
 from physconstants import physical_constants as pC
 
@@ -23,7 +23,7 @@ class Intern:
    ##for i in range(len(WATOMS)):
    ##  index=WATOMS[i]
    ##  atradii.append(COVALENTRADII[index])
-   katoms=array(types)/1
+   katoms=np.array(types)/1
    if len(katoms)!=len(atradii_):
      raise IOError
    for i in range(1,len(katoms)):
@@ -35,8 +35,8 @@ class Intern:
        self.atomictags.append(WATOMS[i])
 
    #print atradii_
-   atradii=ASCALE*array(atradii_)
-   atrad=max(array(atradii))  # maximal allowed length of bond in the system
+   atradii=ASCALE*np.array(atradii_)
+   atrad=max(np.array(atradii))  # maximal allowed length of bond in the system
 
    self.criteria=self.set_criteria(atrad,lattmat)
    self.pexcluded=[None,None,None]
@@ -47,29 +47,29 @@ class Intern:
    # intracellparameters
    for i in range(len(directs)):
      intrawhat.append(i)
-     intrawhere.append(array([0,0,0]))
+     intrawhere.append(np.array([0,0,0]))
      
    # intercell parameters
    interdirects,interwhat,interwhere=self.inter_search(directs,self.criteria)
 
    if len(interdirects)>0:
-     alldirects=zeros((len(directs)+len(interdirects),3),Float)
+     alldirects=np.zeros((len(directs)+len(interdirects),3),dtype=float)
      alldirects[:len(directs)]=directs
      alldirects[len(directs):]=interdirects
    else:
      alldirects=directs
-   #allwhat=zeros((len(intrawhat)+len(interwhat)),Int)
+   #allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
    #allwhat[:len(intrawhat)]=intrawhat
    #allwhat[len(intrawhat):]=interwhat
    allwhat=intrawhat+interwhat
-   #allwhere=zeros((len(intrawhere)+len(interwhere)),Int)
+   #allwhere=np.zeros((len(intrawhere)+len(interwhere)),Int)
    #allwhere[:len(intrawhere)]=intrawhere
    #allwhere[len(intrawhere):]=interwhere
    allwhere=intrawhere+interwhere
    allcartesian=self.dirto_cart(alldirects,lattmat) # modified cell converted to cart coords.
 
-   shortradii=0.2*array(atradii)                         # minimal lengths
-   longradii=array(atradii)                        # upper limit for bond length
+   shortradii=0.2*np.array(atradii)                         # minimal lengths
+   longradii=np.array(atradii)                        # upper limit for bond length
 
    bonds=self.bond_lengths(cartesian,intrawhat,intrawhere,\
    allcartesian,allwhat,allwhere,shortradii,longradii,katoms,'R')
@@ -165,7 +165,7 @@ class Intern:
    criteria[0]=abs(2*atrad/cang10)
    criteria[1]=abs(2*atrad/cang21)
    criteria[2]=abs(2*atrad/cang32)
-   return array(criteria)
+   return np.array(criteria)
 
  def make_exclusions(self,directs,which,criteria):
    """ Excludes those data from row_d, which do not satisfy the criteria
@@ -207,15 +207,15 @@ class Intern:
      transform[i]=0
    for i in range(len(directs)):
      if transform[i]==1:
-       intdirects.append(directs[i]+array([first,second,third]))
+       intdirects.append(directs[i]+np.array([first,second,third]))
        intwhat.append(i)
-       intwhere.append(array([first,second,third]))
+       intwhere.append(np.array([first,second,third]))
    return intdirects,intwhat,intwhere
 
  def dirto_cart(self,directs,lattmat):
    """Conversion from direct to cartesian coords.
    """
-   carts=matrixmultiply(directs,lattmat)
+   carts=np.dot(directs,lattmat)
    return carts
 
  def inter_search(self,directs,criteria):
@@ -262,14 +262,14 @@ class Intern:
          criteria_l=(radii1_l+radii2_l)
 	 b_=directs[fragments[i][ii]]
 	 for t1 in (-1,0,1):
-	   b=zeros(3,Float)
+	   b=np.zeros(3,dtype=float)
 	   b[0]=b_[0]+t1
 	   for t2 in (-1,0,1):
              b[1]=b_[1]+t2
              for t3 in (-1,0,1):
 	       b[2]=b_[2]+t3
 	       r=b-a
-	       r=dot(r,lattmat)
+	       r=np.dot(r,lattmat)
 	       r=sum(r*r)**0.5
 	       if r<=criteria_l:
 		 ibonds.append(r)
@@ -297,14 +297,14 @@ class Intern:
                criteria_l=(radii1_l+radii2_l)
 	       b_=directs[fragments[j][jj]]
 	       for t1 in (-1,0,1):
-	         b=zeros(3,Float)
+	         b=np.zeros(3,dtype=float)
 	         b[0]=b_[0]+t1
 	         for t2 in (-1,0,1):
 		   b[1]=b_[1]+t2
                    for t3 in (-1,0,1):
 		     b[2]=b_[2]+t3
 		     r=b-a
-		     r=dot(r,lattmat)
+		     r=np.dot(r,lattmat)
 		     r=sum(r*r)**0.5
 		     if r<=criteria_l:
 		       ibonds.append(r)
@@ -394,7 +394,7 @@ class Intern:
      for j in range(len(iangwhat[i])):
        windex=iangwhat[i][j]
        vec=directs[i]-(directs[windex]+iangwhere[i][j])
-       vec=matrixmultiply(vec,lattmat)
+       vec=np.dot(vec,lattmat)
        value=mymath.vector_size(vec)
        both=[vec,value]
        vectors.append(both)
@@ -474,9 +474,9 @@ class Intern:
 
  def calc_angle(self,directs,awhat,awhere,lattmat):
    v1=directs[awhat[1]]-(directs[awhat[0]]+awhere[0])
-   v1=matrixmultiply(v1,lattmat)
+   v1=np.dot(v1,lattmat)
    v2=directs[awhat[1]]-(directs[awhat[2]]+awhere[2])
-   v2=matrixmultiply(v2,lattmat)
+   v2=np.dot(v2,lattmat)
    angle=sum(v1*v2)/(sum(v1**2)*sum(v2**2))**0.5
    if angle>1:angle=1.0
    if angle<-1:angle=-1.0
@@ -490,7 +490,7 @@ class Intern:
      if len(iangwhat[i])>1:
        secondwhat=i
       # if len(self.topmap[secondwhat])>4:continue
-       secondwhere=array([0,0,0])
+       secondwhere=np.array([0,0,0])
        for j in range(len(iangwhat[i])):
          firstwhat=iangwhat[i][j]
 	 #if (len(self.topmap[secondwhat])>4 and len(self.topmap[firstwhat])>4):continue
@@ -537,9 +537,9 @@ class Intern:
      vector1=a-b
      vector2=b-c
      vector3=c-d
-     vector1=matrixmultiply(vector1,lattmat)
-     vector2=matrixmultiply(vector2,lattmat)
-     vector3=matrixmultiply(vector3,lattmat)
+     vector1=np.dot(vector1,lattmat)
+     vector2=np.dot(vector2,lattmat)
+     vector3=np.dot(vector3,lattmat)
 
      vector1size=mymath.vector_size(vector1)
      vector2size=mymath.vector_size(vector2)
@@ -586,9 +586,9 @@ class Intern:
    in which atoms of each fraction except of
    the largest one are listed.
    """
-   #self.topology=zeros((numofatoms,numofatoms),Float)
-   self.topology=zeros((numofatoms,numofatoms))
-   self.topology_matrix=zeros((numofatoms,numofatoms))
+   #self.topology=np.zeros((numofatoms,numofatoms),dtype=float)
+   self.topology=np.zeros((numofatoms,numofatoms))
+   self.topology_matrix=np.zeros((numofatoms,numofatoms))
    molecules=[]
    solid=0
    lensolid=0
