@@ -1,5 +1,5 @@
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
+#from numpy.oldnumeric import *
+#from numpy.oldnumeric.linear_algebra import *
 from math import *
 from mymath import *
 import various,datastruct
@@ -11,11 +11,11 @@ class bmatrix:
     """
 
     def __init__(self, cartesian, coords, numofatoms, lattmat, relax):
-        #invlat=transpose(lattmat)
+        #invlat=np.transpose(lattmat)
         #invlat=inverse(invlat)
-        invlat=inverse(lattmat)
-        cartesian=various.format_change(cartesian)
-        dimdim1=len(coords)
+        invlat = np.linalg.inv(lattmat)
+        cartesian = various.format_change(cartesian)
+        dimdim1 = len(coords)
 
         if relax:
             dimdim2=numofatoms*3+9
@@ -28,7 +28,7 @@ class bmatrix:
         #self.prepare_anum(cartesian,angles,lengths,intwhat,intwhere,lattmat,derstep)
         #self.prepare_dhnum(cartesian,dihs,angles,intwhat,intwhere,lattmat,derstep)
         for i in range(len(coords)):
-            BROW=np.zeros((dimdim2), dtype=float)
+            BROW = np.zeros((dimdim2), dtype=float)
             if coords[i].dtyp=='simple':
                 if coords[i].tag=='X':
                     self.Bmatrix[i]=self.prepare_sing(cartesian,coords[i],0,lattmat,invlat,BROW)
@@ -78,24 +78,24 @@ class bmatrix:
                     elif coords[i].tag=='RatioLR':
                         self.Bmatrix[i]=self.prepare_ratiolr(coords[i],lattmat,BROW)
 
-            if coords[i].dtyp=='sum':
-                self.Bmatrix[i]=self.prepare_sum(cartesian,coords[i],lattmat,invlat,BROW)
-            if coords[i].dtyp=='norm':
-                self.Bmatrix[i]=self.prepare_norm(cartesian,coords[i],lattmat,invlat,BROW)
-            if coords[i].dtyp=='cn':
-                self.Bmatrix[i]=self.prepare_cnum(cartesian,coords[i],lattmat,invlat,BROW)
+            if coords[i].dtyp == 'sum':
+                self.Bmatrix[i] = self.prepare_sum(cartesian,coords[i],lattmat,invlat,BROW)
+            if coords[i].dtyp == 'norm':
+                self.Bmatrix[i] = self.prepare_norm(cartesian,coords[i],lattmat,invlat,BROW)
+            if coords[i].dtyp == 'cn':
+                self.Bmatrix[i] = self.prepare_cnum(cartesian,coords[i],lattmat,invlat,BROW)
 
-    def prepare_l(self,cartesian,coord,lattmat,invlat,BROW):
+    def prepare_l(self, cartesian, coord, lattmat, invlat, BROW):
         """
         Calculates length components of the B matrix.
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        vector=a-b
-        dist=vector_size(vector)
-        dl_c=(a-b)/dist
-        dl=matrixmultiply(dl_c,transpose(lattmat))
+        a = cartesian[coord.what[0]] + np.dot(coord.where[0], lattmat)
+        b = cartesian[coord.what[1]] + np.dot(coord.where[1], lattmat)
+        vector = a - b
+        dist = vector_size(vector)
+        dl_c = (a - b)/dist
+        dl = np.dot(dl_c, np.transpose(lattmat))
 
         if coord.what[0]!=coord.what[1]:
             column=coord.what[0]*3
@@ -108,18 +108,18 @@ class bmatrix:
             BROW[column+2]=-dl[2]
 
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((2,3),Float)
+            cmat=np.zeros((2,3),dtype=float)
             cmat[0]=a
             cmat[1]=b
-            dmat=matrixmultiply(cmat,invlat) #-0.5
+            dmat = np.dot(cmat,invlat) #-0.5
             for i in range(3):
                 if dmat[0][i]>1 or dmat[0][i]<0.0:
                     dmat[:,i]-=dmat[0][i]-dmat[0][i]%1
             dmat-=0.5
-            deriv=zeros((2,3),Float)
+            deriv=np.zeros((2,3),dtype=float)
             deriv[0]=dl_c
             deriv[1]=-dl_c
-            latderiv=matrixmultiply(transpose(dmat),deriv)
+            latderiv = np.dot(np.transpose(dmat),deriv)
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -130,10 +130,10 @@ class bmatrix:
         Calculates length components of the B matrix.
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        #c=cartesian[coord.what[2]]+matrixmultiply(coord.where[1],lattmat)+matrixmultiply(coord.where[2],lattmat)
-        c=cartesian[coord.what[2]]+matrixmultiply(coord.where[2],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
+        #c=cartesian[coord.what[2]]+np.dot(coord.where[1],lattmat)+np.dot(coord.where[2],lattmat)
+        c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
 
         vector=a-(b+c)/2
         m=(sum((vector)**2))**0.5
@@ -145,9 +145,9 @@ class bmatrix:
         dalb_c=vector/4
         dalc_c=vector/4
 
-        dala=matrixmultiply(dala_c,transpose(lattmat))
-        dalb=matrixmultiply(dalb_c,transpose(lattmat))
-        dalc=matrixmultiply(dalc_c,transpose(lattmat))
+        dala=np.dot(dala_c,np.transpose(lattmat))
+        dalb=np.dot(dalb_c,np.transpose(lattmat))
+        dalc=np.dot(dalc_c,np.transpose(lattmat))
 
         for i in range(3):
             BROW[(coord.what[1])*3+i]=dalb[i]
@@ -155,21 +155,21 @@ class bmatrix:
             BROW[(coord.what[2])*3+i]+=dalc[i]
 
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((3,3),Float)
+            cmat=np.zeros((3,3),dtype=float)
             cmat[0]=a
             cmat[1]=b
             cmat[2]=c
-            dmat=matrixmultiply(cmat,invlat) #-0.5
+            dmat=np.dot(cmat,invlat) #-0.5
             for i in range(3):
                 if dmat[1][i]>1 or dmat[1][i]<0.0:
                     dmat[:,i]-=dmat[1][i]-dmat[1][i]%1
             dmat-=0.5
             #dmat=self.put_intocell(dmat)-0.5
-            deriv=zeros((3,3),Float)
+            deriv=np.zeros((3,3),dtype=float)
             deriv[0]=dala_c
             deriv[1]=dalb_c
             deriv[2]=dalc_c
-            latderiv=matrixmultiply(transpose(dmat),deriv)
+            latderiv=np.dot(np.transpose(dmat),deriv)
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -181,10 +181,10 @@ class bmatrix:
         Ratio between two bond lengths
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        c=cartesian[coord.what[2]]+matrixmultiply(coord.where[2],lattmat)
-        d=cartesian[coord.what[3]]+matrixmultiply(coord.where[3],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
+        c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
+        d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
         vector1=a-b
         vector2=c-d
         dist1=vector_size(vector1)
@@ -194,10 +194,10 @@ class bmatrix:
         coord_=coord
         coord_.what=tmp1[:2]
         coord_.where=tmp2[:2]
-        dr1=self.prepare_l(cartesian,coord_,lattmat,invlat,zeros(len(BROW),Float))
+        dr1=self.prepare_l(cartesian,coord_,lattmat,invlat,np.zeros(len(BROW),dtype=float))
         coord_.what=tmp1[2:]
         coord_.where=tmp2[2:]
-        dr2=self.prepare_l(cartesian,coord_,lattmat,invlat,zeros(len(BROW),Float))
+        dr2=self.prepare_l(cartesian,coord_,lattmat,invlat,np.zeros(len(BROW),dtype=float))
         coord.what=tmp1
         coord.where=tmp2
         BROW=dr1/dist2-(dist1/dist2**2)*dr2
@@ -208,8 +208,8 @@ class bmatrix:
         Inverse power coordinate
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
         vector=a-b
         dist=vector_size(vector)
         BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
@@ -221,8 +221,8 @@ class bmatrix:
         Another inverse power coordinate
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
         vector=a-b
         dist=vector_size(vector)
         BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
@@ -234,9 +234,9 @@ class bmatrix:
         Calculates angular components of the B matrix.
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        v=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        b=cartesian[coord.what[2]]+matrixmultiply(coord.where[2],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        v=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
+        b=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
         diffav=a-v
         diffbv=b-v
 
@@ -250,9 +250,9 @@ class bmatrix:
         dalc_c=-(diffav/(d1*d2)-diffbv*cosalpha/(d2**2))/sinalpha
         dalb_c=-dala_c-dalc_c
 
-        dala=matrixmultiply(dala_c,transpose(lattmat))
-        dalb=matrixmultiply(dalb_c,transpose(lattmat))
-        dalc=matrixmultiply(dalc_c,transpose(lattmat))
+        dala=np.dot(dala_c,np.transpose(lattmat))
+        dalb=np.dot(dalb_c,np.transpose(lattmat))
+        dalc=np.dot(dalc_c,np.transpose(lattmat))
 
         for i in range(3):
             BROW[(coord.what[1])*3+i]=dalb[i]
@@ -265,21 +265,21 @@ class bmatrix:
             #  BROW[(coord.what[0])*3+i]=dala[i]
             #  BROW[(coord.what[2])*3+i]=dalc[i]
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((3,3),Float)
+            cmat=np.zeros((3,3),dtype=float)
             cmat[0]=a
             cmat[1]=v
             cmat[2]=b
-            dmat=matrixmultiply(cmat,invlat) #-0.5
+            dmat=np.dot(cmat,invlat) #-0.5
             for i in range(3):
                 if dmat[1][i]>1 or dmat[1][i]<0.0:
                     dmat[:,i]-=dmat[1][i]-dmat[1][i]%1
             dmat-=0.5
             #dmat=self.put_intocell(dmat)-0.5
-            deriv=zeros((3,3),Float)
+            deriv=np.zeros((3,3),dtype=float)
             deriv[0]=dala_c
             deriv[1]=dalb_c
             deriv[2]=dalc_c
-            latderiv=matrixmultiply(transpose(dmat),deriv)
+            latderiv=np.dot(np.transpose(dmat),deriv)
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -290,10 +290,10 @@ class bmatrix:
         Calculates dihedral components of the B matrix.
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        c=cartesian[coord.what[2]]+matrixmultiply(coord.where[2],lattmat)
-        d=cartesian[coord.what[3]]+matrixmultiply(coord.where[3],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
+        c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
+        d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
         r12=a-b
         r23=b-c
         r34=c-d
@@ -322,10 +322,10 @@ class bmatrix:
         part4=e12xe23/sinpsi2
         st3_c=-part1*part2-part3*part4
 
-        st1=matrixmultiply(st1_c,transpose(lattmat))
-        st2=matrixmultiply(st2_c,transpose(lattmat))
-        st3=matrixmultiply(st3_c,transpose(lattmat))
-        st4=matrixmultiply(st4_c,transpose(lattmat))
+        st1=np.dot(st1_c,np.transpose(lattmat))
+        st2=np.dot(st2_c,np.transpose(lattmat))
+        st3=np.dot(st3_c,np.transpose(lattmat))
+        st4=np.dot(st4_c,np.transpose(lattmat))
 
         for i in range(3):
             BROW[(coord.what[0]*3)+i]=st1[i]
@@ -333,24 +333,24 @@ class bmatrix:
             BROW[(coord.what[2]*3)+i]=st3[i]
             BROW[(coord.what[3]*3)+i]=st4[i]
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((4,3),Float)
+            cmat=np.zeros((4,3),dtype=float)
             cmat[0]=a
             cmat[1]=b
             cmat[2]=c
             cmat[3]=d
-            dmat=matrixmultiply(cmat,invlat) #-0.5
+            dmat=np.dot(cmat,invlat) #-0.5
             for i in range(3):
                 if dmat[1][i]>1 or dmat[1][i]<0.0:
                     dmat[:,i]-=dmat[1][i]-dmat[1][i]%1
             dmat-=0.5
 
             #dmat=self.put_intocell(dmat)-0.5
-            deriv=zeros((4,3),Float)
+            deriv=np.zeros((4,3),dtype=float)
             deriv[0]=st1_c
             deriv[1]=st2_c
             deriv[2]=st3_c
             deriv[3]=st4_c
-            latderiv=matrixmultiply(transpose(dmat),deriv)
+            latderiv=np.dot(np.transpose(dmat),deriv)
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -361,10 +361,10 @@ class bmatrix:
         Calculates volume of tetrahedron components of the B matrix.
         """
 
-        a=cartesian[coord.what[0]]+matrixmultiply(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+matrixmultiply(coord.where[1],lattmat)
-        c=cartesian[coord.what[2]]+matrixmultiply(coord.where[2],lattmat)
-        d=cartesian[coord.what[3]]+matrixmultiply(coord.where[3],lattmat)
+        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
+        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
+        c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
+        d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
         vector1=b-a
         vector2=c-a
         vector3=d-a
@@ -382,10 +382,10 @@ class bmatrix:
             st3_c=-st3_c
             st4_c=-st4_c
 
-        st1=matrixmultiply(st1_c,transpose(lattmat))
-        st2=matrixmultiply(st2_c,transpose(lattmat))
-        st3=matrixmultiply(st3_c,transpose(lattmat))
-        st4=matrixmultiply(st4_c,transpose(lattmat))
+        st1=np.dot(st1_c,np.transpose(lattmat))
+        st2=np.dot(st2_c,np.transpose(lattmat))
+        st3=np.dot(st3_c,np.transpose(lattmat))
+        st4=np.dot(st4_c,np.transpose(lattmat))
 
         for i in range(3):
             BROW[(coord.what[0]*3)+i]=st1[i]
@@ -393,24 +393,24 @@ class bmatrix:
             BROW[(coord.what[2]*3)+i]=st3[i]
             BROW[(coord.what[3]*3)+i]=st4[i]
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((4,3),Float)
+            cmat=np.zeros((4,3),dtype=float)
             cmat[0]=a
             cmat[1]=b
             cmat[2]=c
             cmat[3]=d
-            dmat=matrixmultiply(cmat,invlat) #-0.5
+            dmat=np.dot(cmat,invlat) #-0.5
             for i in range(3):
                 if dmat[1][i]>1 or dmat[1][i]<0.0:
                     dmat[:,i]-=dmat[1][i]-dmat[1][i]%1
             dmat-=0.5
 
             #dmat=self.put_intocell(dmat)-0.5
-            deriv=zeros((4,3),Float)
+            deriv=np.zeros((4,3),dtype=float)
             deriv[0]=st1_c
             deriv[1]=st2_c
             deriv[2]=st3_c
             deriv[3]=st4_c
-            latderiv=matrixmultiply(transpose(dmat),deriv)
+            latderiv=np.dot(np.transpose(dmat),deriv)
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -497,24 +497,24 @@ class bmatrix:
         b2/=(naxb*naxc)
         b3/=(naxb*naxc)
 
-        daxb_da=transpose(array([[0.,-b[2],b[1]],[b[2],0.,-b[0]],[-b[1],b[0],0.]]))
-        daxb_da=matrixmultiply(axb,daxb_da)/naxb
+        daxb_da=np.transpose(np.array([[0.,-b[2],b[1]],[b[2],0.,-b[0]],[-b[1],b[0],0.]]))
+        daxb_da=np.dot(axb,daxb_da)/naxb
         c1=daxb_da*naxc*sum(axb*axc)/(naxb*naxc)**2
 
-        daxb_db=transpose(array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
-        daxb_db=matrixmultiply(axb,daxb_db)/naxb
+        daxb_db=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
+        daxb_db=np.dot(axb,daxb_db)/naxb
         c2=daxb_db*naxc*sum(axb*axc)/(naxb*naxc)**2
 
-        c3=zeros(3,Float)
+        c3=np.zeros(3,dtype=float)
 
-        daxc_da=transpose(array([[0.,-c[2],c[1]],[c[2],0.,-c[0]],[-c[1],c[0],0.]]))
-        daxc_da=matrixmultiply(axc,daxc_da)/naxc
+        daxc_da=np.transpose(np.array([[0.,-c[2],c[1]],[c[2],0.,-c[0]],[-c[1],c[0],0.]]))
+        daxc_da=np.dot(axc,daxc_da)/naxc
         d1=daxc_da*naxb*sum(axb*axc)/(naxb*naxc)**2
 
-        d2=zeros(3,Float)
+        d2=np.zeros(3,dtype=float)
 
-        daxc_dc=transpose(array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
-        daxc_dc=matrixmultiply(axc,daxc_dc)/naxc
+        daxc_dc=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
+        daxc_dc=np.dot(axc,daxc_dc)/naxc
         d3=daxc_dc*naxb*sum(axb*axc)/(naxb*naxc)**2
 
         ind1=-9
@@ -575,10 +575,10 @@ class bmatrix:
 
         for i in range(lengths):
             a=cartesian[intwhat[i][0]]
-            b=cartesian[intwhat[i][1]]+matrixmultiply(intwhere[i][1],lattmat)
+            b=cartesian[intwhat[i][1]]+np.dot(intwhere[i][1],lattmat)
             distnul=self.calculate_le(a,b)
             for j in range(3):
-                dershift=array([0.00,0.00,0.00])
+                dershift=np.array([0.00,0.00,0.00])
                 dershift[j]=derstep
                 a1=a+dershift
                 dist1=self.calculate_le(a1,b)
@@ -594,12 +594,12 @@ class bmatrix:
         Calculates angular components of the B matrix numericaly.
         """
 
-        a=cartesian[what[0]]+matrixmultiply(where[0],lattmat)
+        a=cartesian[what[0]]+np.dot(where[0],lattmat)
         v=cartesian[what[1]] # apex atom, allways in [0,0,0]
-        b=cartesian[what[2]]+matrixmultiply(where[2],lattmat)
+        b=cartesian[what[2]]+np.dot(where[2],lattmat)
         alphanul=self.calculate_an(a,v,b)
         for j in range(3):
-            dershift=array([0.00,0.00,0.00])
+            dershift=np.array([0.00,0.00,0.00])
             dershift[j]=derstep
             a1=a+dershift
             alpha1=self.calculate_an(a1,v,b)
@@ -617,14 +617,14 @@ class bmatrix:
         Calculates dihedral components of the B matrix numericaly.
         """
 
-        a=cartesian[what[0]]+matrixmultiply(where[0],lattmat)
+        a=cartesian[what[0]]+np.dot(where[0],lattmat)
         b=cartesian[what[1]]  #allways in [0,0,0]
-        c=cartesian[what[2]]+matrixmultiply(where[2],lattmat)
-        d=cartesian[what[3]]+matrixmultiply(where[3],lattmat)
+        c=cartesian[what[2]]+np.dot(where[2],lattmat)
+        d=cartesian[what[3]]+np.dot(where[3],lattmat)
         dihnul=self.calculate_da(a,b,c,d)
 
         for j in range(3):
-            dershift=array([0.00,0.00,0.00])
+            dershift = np.array([0.00,0.00,0.00])
             dershift[j]=derstep
             a1=a+dershift
             a2=a-dershift
@@ -694,20 +694,20 @@ class bmatrix:
         Adds elements corresponding to pure cartesian coordinates.
         """
 
-        ddd_c=zeros((1,3),Float)
+        ddd_c=np.zeros((1,3),dtype=float)
         ddd_c[0][xyz]=1.0
-        ddd=matrixmultiply(ddd_c,transpose(lattmat))
+        ddd=np.dot(ddd_c,np.transpose(lattmat))
         indx=coord.what[0]*3
         a=cartesian[coord.what[0],xyz]
         BROW[indx:indx+3]=ddd[0]
         if len(BROW)==3*len(cartesian)+9:
-            cmat=zeros((1,3),Float)
+            cmat=np.zeros((1,3),dtype=float)
             cmat[0][xyz]=a
-            dmat=matrixmultiply(cmat,invlat)  #-0.5
+            dmat=np.dot(cmat,invlat)  #-0.5
             # dmat=self.put_intocell(dmat)-0.5
-            deriv=zeros((1,3),Float)
+            deriv=np.zeros((1,3),dtype=float)
             deriv[0][xyz]=1.0
-            latderiv=matrixmultiply(transpose(dmat),deriv)#*0 ######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            latderiv=np.dot(np.transpose(dmat),deriv)#*0 ######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             BROW[-9:-6]=latderiv[0]
             BROW[-6:-3]=latderiv[1]
             BROW[-3:]=latderiv[2]
@@ -738,9 +738,9 @@ class bmatrix:
         return BROW
 
     def prepare_sum(self,cartesian,coord,lattmat,invlat,BROW):
-        #XROW=zeros(len(BROW),Float)
+        #XROW=np.zeros(len(BROW),dtype=float)
         for i in range(len(coord.tag)):
-            XROW=zeros(len(BROW),Float)
+            XROW=np.zeros(len(BROW),dtype=float)
             tcoord=datastruct.Complextype('simple',[1],coord.tag[i],coord.what[i],[None],coord.where[i],0.0,'free')
             if coord.tag[i]=='X':
                 BROW=BROW+coord.coefs[i]*self.prepare_sing(cartesian,tcoord,0,lattmat,invlat,XROW)
@@ -800,16 +800,16 @@ class bmatrix:
                 complexcoord+=((coord.coefs[i]**2)*dist)
                 BROW=BROW+(coord.coefs[i]**2)*dist*self.prepare_sing(cartesian,tcoord,2,lattmat,invlat,BROW)
             if coord.tag[i]=='R':
-                a=cartesian[tcoord.what[0]]+matrixmultiply(tcoord.where[0],lattmat)
-                b=cartesian[tcoord.what[1]]+matrixmultiply(tcoord.where[1],lattmat)
+                a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
+                b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
                 vector=a-b
                 dist=vector_size(vector)
                 complexcoord+=((coord.coefs[i]**2)*dist)
-                BROW=BROW+(coord.coefs[i]**2)*dist*self.prepare_l(cartesian,tcoord,lattmat,invlat,zeros(len(BROW),Float))
+                BROW=BROW+(coord.coefs[i]**2)*dist*self.prepare_l(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
             if coord.tag[i]=='A':
-                a=cartesian[tcoord.what[0]]+matrixmultiply(tcoord.where[0],lattmat)
-                v=cartesian[tcoord.what[1]]+matrixmultiply(tcoord.where[1],lattmat)
-                b=cartesian[tcoord.what[2]]+matrixmultiply(tcoord.where[2],lattmat)
+                a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
+                v=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
+                b=cartesian[tcoord.what[2]]+np.dot(tcoord.where[2],lattmat)
                 diffav=a-v
                 diffbv=b-v
                 d1=vector_size(diffav)
@@ -817,12 +817,12 @@ class bmatrix:
                 cosalpha=(sum(diffav*diffbv)/(d1*d2))
                 alpha=acos(cosalpha)
                 complexcoord+=((coord.coefs[i]**2)*alpha)
-                BROW=BROW+(coord.coefs[i]**2)*alpha*self.prepare_a(cartesian,tcoord,lattmat,invlat,zeros(len(BROW),Float))
+                BROW=BROW+(coord.coefs[i]**2)*alpha*self.prepare_a(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
             if coord.tag[i]=='T':
-                a=cartesian[tcoord.what[0]]+matrixmultiply(tcoord.where[0],lattmat)
-                b=cartesian[tcoord.what[1]]+matrixmultiply(tcoord.where[1],lattmat)
-                c=cartesian[tcoord.what[2]]+matrixmultiply(tcoord.where[2],lattmat)
-                d=cartesian[tcoord.what[3]]+matrixmultiply(tcoord.where[3],lattmat)
+                a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
+                b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
+                c=cartesian[tcoord.what[2]]+np.dot(tcoord.where[2],lattmat)
+                d=cartesian[tcoord.what[3]]+np.dot(tcoord.where[3],lattmat)
                 vector1=a-b
                 vector2=b-c
                 vector3=c-d
@@ -840,7 +840,7 @@ class bmatrix:
                     dangle=-dangle
                 complexcoord+=((coord.coefs[i]**2)*dangle)
                 BROW=BROW+(coord.coefs[i]**2)*dangle*self.prepare_dh(cartesian,tcoord,lattmat,\
-                invlat,zeros(len(BROW),Float))
+                invlat,np.zeros(len(BROW),dtype=float))
         BROW=BROW/complexcoord**(0.5)
         return BROW
 
@@ -849,8 +849,8 @@ class bmatrix:
             if coord.tag[i]=='R':
                 if abs(coord.coefs[i])>1e-4:
                     tcoord=datastruct.Complextype('simple',[1],coord.tag[i],coord.what[i],[None],coord.where[i],0.0,'free')
-                    a=cartesian[tcoord.what[0]]+matrixmultiply(tcoord.where[0],lattmat)
-                    b=cartesian[tcoord.what[1]]+matrixmultiply(tcoord.where[1],lattmat)
+                    a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
+                    b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
                     vector=a-b
                     dist=vector_size(vector)
                     dummyA=dist/coord.coefs[i]
@@ -858,7 +858,7 @@ class bmatrix:
                         dummyA=1.0001
                     dummyC=1.0-dummyA**9
                     dummyD=1.0-dummyA**14
-                    BROW_=self.prepare_l(cartesian,tcoord,lattmat,invlat,zeros(len(BROW),Float))
+                    BROW_=self.prepare_l(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
                     BROW=BROW-9.0*BROW_*(dummyA**9.0/dist)/dummyD
                     BROW=BROW+14.0*dummyC*BROW_*(dummyA**14.0/dist)/dummyD**2
         return BROW
