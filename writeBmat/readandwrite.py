@@ -1,9 +1,10 @@
-from numpy.oldnumeric import *
 from fpformat import *
 import string
 #import cPickle as pickle
 import pickle
 import various,mymath
+
+import numpy as np
 
 from physconstants import physical_constants as pC
 
@@ -49,7 +50,7 @@ def read_whatwhere(fname):
       k=len(whereline)/3
       delement=[]
       for j in range(k):
-        element=array([whereline[j*3],whereline[j*3+1],whereline[j*3+2]])
+        element = np.array([whereline[j*3],whereline[j*3+1],whereline[j*3+2]])
         delement.append(element)
     intwhere.append(delement)
   wfile.close()
@@ -102,7 +103,7 @@ def read_cwhatwhere(fname,crt,lattmat):
 
       if whereline[0]=='S':  #! this is a shortest distance tag
         if tagline=='R' or tagline=='IR1' or tagline=='IR6':
-          delement=array(various.shortest_dist(crt,lattmat,whatline[0],whatline[1]))
+          delement=np.array(various.shortest_dist(crt,lattmat,whatline[0],whatline[1]))
         if tagline=='A':
           delement1=various.shortest_dist(crt,lattmat,whatline[1],whatline[0])
           delement2=various.shortest_dist(crt,lattmat,whatline[1],whatline[2])
@@ -120,15 +121,15 @@ def read_cwhatwhere(fname,crt,lattmat):
           delement1=various.shortest_dist(crt,lattmat,whatline[1],whatline[0])
           delement2=various.shortest_dist(crt,lattmat,whatline[1],whatline[2])
           delement3=various.shortest_dist(crt,lattmat,whatline[2],whatline[3])
-	  delement=[delement1[1],delement1[0],delement2[1],array(delement3[1])+array(delement2[1])]
+	  delement=[delement1[1],delement1[0],delement2[1],np.array(delement3[1])+np.array(delement2[1])]
 	if tagline=='tV':
           delement1=various.shortest_dist(crt,lattmat,whatline[0],whatline[1])
           delement2=various.shortest_dist(crt,lattmat,whatline[0],whatline[2])
           delement3=various.shortest_dist(crt,lattmat,whatline[0],whatline[3])
 	  delement=[delement1[0],delement1[1],delement2[1],delement3[1]]
         if tagline=='RatioR':
-          delement1=array(various.shortest_dist(crt,lattmat,whatline[0],whatline[1]))
-          delement2=array(various.shortest_dist(crt,lattmat,whatline[2],whatline[3]))
+          delement1=np.array(various.shortest_dist(crt,lattmat,whatline[0],whatline[1]))
+          delement2=np.array(various.shortest_dist(crt,lattmat,whatline[2],whatline[3]))
           delement=[delement1[0],delement1[1],delement2[0],delement2[1]]
 	 
       else:
@@ -137,7 +138,7 @@ def read_cwhatwhere(fname,crt,lattmat):
         k=len(whereline)/3
         delement=[]
         for j in range(k):
-          element=array([whereline[j*3],whereline[j*3+1],whereline[j*3+2]])
+          element=np.array([whereline[j*3],whereline[j*3+1],whereline[j*3+2]])
           delement.append(element)
       intwhere.append(delement)
     if ctag==1:
@@ -227,7 +228,7 @@ def write_pstore(coords,name):
 def write_constrained(fname,xconstrained,numofatoms):
   cfile=open(fname,'w')
   for i in xconstrained:
-    row=zeros(3*numofatoms,Float)
+    row = np.zeros(3*numofatoms, dtype=float)
     row[i]=1
     wrow=''
     for j in range(len(row)):
@@ -290,13 +291,13 @@ def read_hmat():
   prefield=hfile.readline()
   prefield=prefield.split()
   Hdim=int((len(prefield))**0.5)
-  Hmat=zeros((Hdim,Hdim),Float)
+  Hmat = np.zeros((Hdim,Hdim), dtype=float)
   for i in range(Hdim):
     for j in range(Hdim):
       num=i*Hdim+j
       Hmat[i][j]=float(prefield[num])
   hfile.close()
-  return array(Hmat)
+  return np.array(Hmat)
 
 def write_hmat(hnext):
   hfile=open('hmat','w')
@@ -315,7 +316,7 @@ def read_umat(cfile='UMAT'):
       line[i]=float(line[i])
     utrans.append(line)
   ufile.close()
-  utrans=array(utrans)
+  utrans = np.array(utrans)
   return utrans
 
 
