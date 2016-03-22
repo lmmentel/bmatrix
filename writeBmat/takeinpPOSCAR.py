@@ -1,11 +1,12 @@
 #from Numeric import *
 #from LinearAlgebra import *
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
 
 from math import *
 from mymath import *
 import string
+
+import numpy as np
+
 from physconstants import physical_constants as pC
 
 class ParseException:
@@ -25,22 +26,22 @@ class TakeInput:
    self.atomicFlags=[] # flags corresponding to different types
    self.atomicMass=[] # mass for each atomic type (amu)
    self.scaling=1.
-   self.lattmat=zeros((3,3),Float) # lattice vectors (A or au)
-   self.lattinv=zeros((3,3),Float) # reciprocal lattice vectors
+   self.lattmat = np.zeros((3,3), dtype=float) # lattice vectors (A or au)
+   self.lattinv = np.zeros((3,3), dtype=float) # reciprocal lattice vectors
    self.volume=0. # cell volume
    self.coords_d=[] # fractional coordinates
    self.coords_c=[] # cartesial coordinates
    self.xconstrained=[]
    self.energy=0. # total energy
-   self.stress=zeros(6,Float) # components of the stress tensor
+   self.stress = np.zeros(6, dtype=float) # components of the stress tensor
    self.gradients=[] # atomic forces
 
 
 
  def convert_to_au(self):
    if len(self.lattmat)==3: self.lattmat/=pC['AU2A']
-   if len(self.lattinv)==3: self.lattinv=inverse(self.lattmat)
-   self.volume=abs(determinant(self.lattmat))
+   if len(self.lattinv)==3: self.lattinv = np.linalg.inv(self.lattmat)
+   self.volume=abs(np.linalg.det(self.lattmat))
    if len(self.coords_c)>0: self.coords_c/=pC['AU2A']
    self.energy/=pC['Hartree2eV']
    if len(self.stress)>0:self.stress/=pC['Hartree2eV']
@@ -55,7 +56,7 @@ class TakeInput:
    atomtag=0
    old=open(ifile)
    i=0                                 # row counter
-   lattmat_tmp=zeros((3,3),Float)
+   lattmat_tmp = np.zeros((3,3), dtype=float)
    # reads scaling factor and lattice parameters
    for line in old.readlines():
      i=i+1
@@ -76,7 +77,7 @@ class TakeInput:
          self.scaling=(abs(self.scaling)/self.volume)**(1.0/3.0)
        lattmat_tmp=self.scaling*lattmat_tmp
        self.lattmat=lattmat_tmp
-       self.lattinv=inverse(self.lattmat)
+       self.lattinv = np.linalg.inv(self.lattmat)
        self.volume=cross_product(lattmat_tmp[0],lattmat_tmp[1])
        self.volume=abs(sum(self.volume*lattmat_tmp[2]))
        self.atomicFlags=line  
@@ -86,14 +87,14 @@ class TakeInput:
          katoms.append(int(line[j]))
        self.types=katoms
        self.numofatoms=sum(katoms)
-       lattmat_tmp=zeros((3,3),Float)
-       coords=zeros((self.numofatoms,3),Float)
+       lattmat_tmp = np.zeros((3,3), dtype=float)
+       coords = np.zeros((self.numofatoms,3), dtype=float)
      if i==8:
        if (line[0][0])=="C" or (line[0][0])=="c":
          coordtype='cart'
 
      if i>8:
-       
+
        indx=(i)%(self.numofatoms+8)
        if (indx==0): indx=self.numofatoms+8
        #if indx<=2 or indx==6 or indx==7 or indx==8: 
@@ -107,13 +108,10 @@ class TakeInput:
          if indx==self.numofatoms+8:
            if coordtype=='direct':
 	     self.coords_d=coords
-             self.coords_c=matrixmultiply(self.coords_d,self.lattmat)
+             self.coords_c=np.dot(self.coords_d,self.lattmat)
            else:
              self.coords_c=coords
-             self.coords_d=matrixmultiply(self.coords_c,self.lattinv)
-             
-             
-	   
+             self.coords_d = np.dot(self.coords_c,self.lattinv)
    old.close()
 
 #check internal consistency: TODO

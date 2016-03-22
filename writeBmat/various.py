@@ -1,4 +1,4 @@
-from numpy.oldnumeric import *
+import numpy as np
 
 def change_format(xyz):
 # transform the three-column format into
@@ -7,7 +7,7 @@ def change_format(xyz):
   for i in range(len(xyz)):
     for j in range(3):
       newxyz.append(xyz[i][j])
-  return array(newxyz)
+  return np.array(newxyz)
 
 def format_change(xyz):
 # transform the one column format into
@@ -15,7 +15,7 @@ def format_change(xyz):
   newxyz=[]
   for i in range(len(xyz)/3):
     newxyz.append([xyz[3*i],xyz[3*i+1],xyz[3*i+2]])
-  return array(newxyz)
+  return np.array(newxyz)
 
 def step_lim(prims1,prims2,coords,STEPLIM):
   step=abs(prims2-prims1)
@@ -66,6 +66,6 @@ def shortest_dist(cartesians,lattmat,atom1,atom2):
         dists.append(dist)
         what.append([i,j,k])
 
-  dists=array(dists)
-  dummy=argmin(dists)
+  dists = np.array(dists)
+  dummy = np.argmin(dists)
   return [[0,0,0],[what[dummy][0],what[dummy][1],what[dummy][2]]]

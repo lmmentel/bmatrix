@@ -1,9 +1,9 @@
 #!/usr/local/bin/python
 
-from numpy.oldnumeric import *
-from numpy.oldnumeric.linear_algebra import *
 from math import *
 import re
+import numpy as np
+
 from physconstants import physical_constants as pC
 
 class ParseException:
@@ -23,14 +23,14 @@ class TakeInput:
    self.atomicFlags=[] # flags corresponding to different types
    self.atomicMass=[] # mass for each atomic type (amu)
    self.scaling=1. 
-   self.lattmat=zeros((3,3),Float) # lattice vectors (A or au)
-   self.lattinv=zeros((3,3),Float) # reciprocal lattice vectors
+   self.lattmat=np.zeros((3,3), dtype=float) # lattice vectors (A or au)
+   self.lattinv=np.zeros((3,3), dtype=float) # reciprocal lattice vectors
    self.volume=0. # cell volume
    self.coords_d=[] # fractional coordinates
    self.coords_c=[] # cartesial coordinates
    self.xconstrained=[]
    self.energy=0. # total energy
-   self.stress=zeros(6,Float) # components of the stress tensor
+   self.stress=np.zeros(6, dtype=float) # components of the stress tensor
    self.gradients=[] # atomic forces
    #TODO: read Selective Dynamics!!!
    #TODO: check if NSW==1!!!
@@ -67,13 +67,13 @@ class TakeInput:
 	 else:
 	   print "problem reading atomic mass!!!" 
 	 continue
-       
+
        dummy=re.search("POSCAR:",line)
        if dummy:
 	 k=dummy.end()
 	 self.comment=line[k+1:-1]	 
 	 continue
-       
+
        dummy=re.search("ions per type =",line)
        if dummy:
          k=dummy.end()
@@ -82,8 +82,8 @@ class TakeInput:
 	   self.types.append(int(types_[i]))
 	 self.numofatoms=sum(self.types)
 	 self.ntypes=len(self.types)
-	 self.coords_d=zeros((self.numofatoms,3),Float)
-	 self.gradients=zeros((self.numofatoms,3),Float)
+	 self.coords_d = np.zeros((self.numofatoms,3), dtype=float)
+	 self.gradients = np.zeros((self.numofatoms,3), dtype=float)
 	 task=1   
 	 continue 
      if task==1:
@@ -166,21 +166,20 @@ class TakeInput:
 	 task+=1   
 	 continue 
    f.close()
-   self.lattmat=array(self.lattmat)
-   self.lattinv=inverse(self.lattmat)
-   self.coords_d=array(self.coords_d)
-   self.coords_c=dot(self.coords_d,self.lattmat)
-   self.volume=abs(determinant(self.lattmat))
-   
+   self.lattmat = np.array(self.lattmat)
+   self.lattinv = np.linalg.inv(self.lattmat)
+   self.coords_d = np.array(self.coords_d)
+   self.coords_c = np.dot(self.coords_d,self.lattmat)
+   self.volume=abs(np.linalg.det(self.lattmat))
+
  def convert_to_au(self):
-   self.lattmat/=pC['AU2A']
-   self.lattinv=inverse(self.lattmat)
-   self.volume=abs(determinant(self.lattmat))
-   self.coords_c/=pC['AU2A']
-   self.energy/=pC['Hartree2eV']
-   self.stress/=pC['Hartree2eV']
-   self.gradients*=pC['AU2A']/pC['Hartree2eV']
- 
+   self.lattmat /= pC['AU2A']
+   self.lattinv = np.linalg.inv(self.lattmat)
+   self.volume=abs(np.linalg.det(self.lattmat))
+   self.coords_c /= pC['AU2A']
+   self.energy /= pC['Hartree2eV']
+   self.stress /= pC['Hartree2eV']
+   self.gradients *= pC['AU2A']/pC['Hartree2eV']
  
 #out=TakeInput()
 #out.read("OUTCAR")
