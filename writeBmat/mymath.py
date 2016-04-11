@@ -1,3 +1,5 @@
+from __future__ import division
+
 from math import *
 
 import numpy as np
@@ -68,10 +70,10 @@ def orthonormalize_mat(matrix):
       for k in range(0,j):
         l=sizes[k]
         matrix[i]=matrix[i] - np.inner(matrix[i],matrix[l])*matrix[l]
-	norm=vector_size(matrix[i])
-	if norm>1e-05:
+  norm=vector_size(matrix[i])
+  if norm>1e-05:
           matrix[i]=matrix[i]/norm
-	else: matrix[i]=matrix[i]*0.0
+  else: matrix[i]=matrix[i]*0.0
   return matrix
 
 def remove_zrows(matrix):
@@ -146,7 +148,7 @@ def cd_transmatrix(lvect,dim):
   coordinates
   """
   transmat=np.zeros((dim,dim),dtype=float)
-  for i in range(dim/3):
+  for i in range(dim//3):
     transmat[3*i:3*i+3,3*i:3*i+3]=np.transpose(lvect)
   return transmat
 

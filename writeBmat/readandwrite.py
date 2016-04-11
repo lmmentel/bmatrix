@@ -1,4 +1,6 @@
-from fpformat import *
+
+from __future__ import print_function
+
 import string
 #import cPickle as pickle
 import pickle
@@ -251,7 +253,7 @@ def read_constrained(cfile=''):
     except IOError:
       return cmodes
     else:
-      print 'FILE WITH CONSTRAINED fractional coordinates read in'
+      print('FILE WITH CONSTRAINED fractional coordinates read in')
   return cmodes
 
 def read_atoms(cfile='ATOMS'):
@@ -273,7 +275,7 @@ def write_matrix(matrix,cfile):
   
 def write_maxstep(MAXSTEP,cfile):
   tfile=open(cfile,'w')
-  tfile.write(fix(MAXSTEP,10))
+  tfile.write('{0:15.10f}'.format(MAXSTEP))
   tfile.close()
   
 def read_maxstep(cfile):

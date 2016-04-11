@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import argparse
 import sys
 import time
@@ -8,7 +10,6 @@ import numpy as np
 
 from math import *
 from string import *
-from fpformat import *
 
 import bmatrix
 import intcoord
@@ -78,9 +79,9 @@ def main():
         deal=dealxyz.Dealxyz(cartesian[:-9], primcoords, lattmat)
         for i in range(len(primcoords)):
             primcoords[i].value=deal.internals[i]
-        print 'Internal coordinates were read-in from the file COORDINATES.gadget'
+        print('Internal coordinates were read-in from the file COORDINATES.gadget')
     except IOError:
-        print 'Internal coordinates were newly generated'
+        print('Internal coordinates were newly generated')
         intrn = intcoord.Intern(atomquality, args.atradii, args.ascale, args.bscale, args.anglecrit,
                                 args.torsioncrit, args.fragcoord, args.relax, args.torsions,
                                 args.subst, inpt.numofatoms, inpt.lattmat, inpt.coords_d,
@@ -88,7 +89,7 @@ def main():
         primcoords = intrn.internalcoords
         write_matrix(primcoords, 'COORDINATES.gadget')
 
-    print time.time() - t0, "seconds wall time coord check"
+    print(time.time() - t0, "seconds wall time coord check")
 
     #c now compute the Bmatrix (wrt. fractional coordinates!)
     b = bmatrix.bmatrix(cartesian[:-9], primcoords, inpt.numofatoms, lattmat, args.relax)
@@ -109,13 +110,13 @@ def main():
     else:
         transmat = mymath.cd_transmatrix(lattinv, 3*inpt.numofatoms)
 
-    print time.time() - t0, "seconds wall time for Bmat computation"
+    print(time.time() - t0, "seconds wall time for Bmat computation")
 
 
     t0 = time.time()
     #Bmat_c2=matrixmultiply(Bmat,transmat)
     Bmat_c2 = np.dot(Bmat, transmat)
-    print time.time() - t0, "seconds wall time for Bmat multiplication"
+    print(time.time() - t0, "seconds wall time for Bmat multiplication")
 
     if args.coordinates == 'cartesian':
         Bmat = Bmat_c2
@@ -151,7 +152,7 @@ def main():
             where+=' '+str(primcoords[i].where[2][0])+' '+str(primcoords[i].where[2][1])+' '+str(primcoords[i].where[2][2])
             where+=' '+str(primcoords[i].where[3][0])+' '+str(primcoords[i].where[3][1])+' '+str(primcoords[i].where[3][2])
         else:
-            print 'Error: unsupported coordinate type',primcoords[i].tag
+            print('Error: unsupported coordinate type', primcoords[i].tag)
             sys.exit()
     #  row+=': '+what+': '+where
     row+='  '+what+': '+where
@@ -169,7 +170,7 @@ def main():
 
     f.close()
 
-    print time.time() - t0, "seconds wall time for writing on bmat.dat"
+    print(time.time() - t0, "seconds wall time for writing on bmat.dat")
 
 if __name__ == '__main__':
     main()

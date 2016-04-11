@@ -1,3 +1,6 @@
+
+from __future__ import division
+
 import numpy as np
 
 def change_format(xyz):
@@ -13,7 +16,7 @@ def format_change(xyz):
 # transform the one column format into
 # three column one
   newxyz=[]
-  for i in range(len(xyz)/3):
+  for i in range(len(xyz)//3):
     newxyz.append([xyz[3*i],xyz[3*i+1],xyz[3*i+2]])
   return np.array(newxyz)
 

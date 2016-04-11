@@ -1,5 +1,7 @@
 #!/usr/local/bin/python
 
+from __future__ import print_function
+
 from math import *
 import re
 import numpy as np
@@ -12,7 +14,6 @@ class ParseException:
     self.value = value
   def __str__(self):
     return self.value
-
 
 class TakeInput:
  def __init__(self):
@@ -52,7 +53,7 @@ class TakeInput:
 	   line=line[:k].strip()
 	   self.atomicFlags.append(line[:k])
 	 else:
-	   print "problem reading atomic flags!!!" 
+	   print("problem reading atomic flags!!!")
 	 continue
        
        dummy=re.search("POMASS =",line)
@@ -65,7 +66,7 @@ class TakeInput:
 	   line=line[:k].strip()
 	   self.atomicMass.append(float(line[:k]))
 	 else:
-	   print "problem reading atomic mass!!!" 
+	   print("problem reading atomic mass!!!")
 	 continue
 
        dummy=re.search("POSCAR:",line)

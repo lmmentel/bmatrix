@@ -1,5 +1,5 @@
-#from Numeric import *
-#from LinearAlgebra import *
+
+from __future__ import print_function
 
 from math import *
 from mymath import *
@@ -102,12 +102,12 @@ class TakeInput:
        if (indx==1):
          break
        elif indx>8:
-	 coords[indx-9][0]=float(line[0])
-	 coords[indx-9][1]=float(line[1])
+         coords[indx-9][0]=float(line[0])
+         coords[indx-9][1]=float(line[1])
          coords[indx-9][2]=float(line[2])
          if indx==self.numofatoms+8:
            if coordtype=='direct':
-	     self.coords_d=coords
+             self.coords_d=coords
              self.coords_c=np.dot(self.coords_d,self.lattmat)
            else:
              self.coords_c=coords
@@ -148,6 +148,7 @@ class TakeInput:
 #print "out.energy",out.energy
 #print "out.stress",out.stress
 #print "out.gradients",out.gradients
+
 
 
 

@@ -50,13 +50,13 @@ class Dealxyz:
         internal=5/internal
       elif coords[i].tag=='IR6':
         internal=self.set_lengths(cart,coords[i].what,coords[i].where,lattmat)
-	internal=2000/internal**6
+        internal=2000/internal**6
       elif coords[i].tag=='LR':
         internal=self.set_llength(coords[i].what,lattmat)
       elif coords[i].tag=='LA':
         internal=self.set_langle(coords[i].what,lattmat)
       elif coords[i].tag=='LB':
-        internal=self.set_lbngle(coords[i].what,lattmat)	
+        internal=self.set_lbngle(coords[i].what,lattmat)
       elif coords[i].tag=='LV':
         internal=self.set_lvolume(lattmat)
       elif coords[i].tag=='RatioLR':
@@ -244,7 +244,7 @@ class Dealxyz:
       if coord.tag[i]=='fY':
         dist=self.set_fsingles(cart,1,coord.what[i],lattmat)
       if coord.tag[i]=='fZ':
-	dist=self.set_fsingles(cart,2,coord.what[i],lattmat)
+        dist=self.set_fsingles(cart,2,coord.what[i],lattmat)
       if coord.tag[i]=='R':
         dist=self.set_lengths(cart,coord.what[i],coord.where[i],lattmat)
       if coord.tag[i]=='M':
