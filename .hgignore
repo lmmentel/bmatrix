@@ -1,0 +1,16 @@
+syntax: glob
+# ignore the object files libraries and executables
+*.o
+*.a
+*.x
+*.mod
+.*.swp
+# python 
+*.pyc
+# latex stuff
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+docs/build/**
