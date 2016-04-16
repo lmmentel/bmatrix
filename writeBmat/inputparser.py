@@ -208,6 +208,7 @@ def parse_args(parser):
             atradii = {}
     else:
         print('Configuration file: {} not found, uning defaults.'.format(args.config))
+        atradii = {}
 
     args.atradii = atradii
     args.cscale = args.cscale if args.cscale else args.ascale
