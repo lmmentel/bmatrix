@@ -1,5 +1,4 @@
-#from numpy.oldnumeric import *
-#from numpy.oldnumeric.linear_algebra import *
+
 from math import *
 from mymath import *
 import various,datastruct
@@ -18,9 +17,9 @@ class bmatrix:
         dimdim1 = len(coords)
 
         if relax:
-            dimdim2=numofatoms*3+9
+            dimdim2 = numofatoms * 3 + 9
         else:
-            dimdim2=numofatoms*3
+            dimdim2 = numofatoms * 3
 
         self.Bmatrix = np.zeros((dimdim1, dimdim2), dtype=float)
         derstep=0.00001
