@@ -1,22 +1,25 @@
 
 from __future__ import print_function, division
+
 import argparse
 import ConfigParser
 import os
 
 import numpy as np
 
+
 def get_input_args():
     'Get the command line options and parse the config file if present'
 
     return parse_args(create_parser())
+
 
 def create_parser():
     'Create the parser and define all the arguments'
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('filename', help='Name of the file with coordianates')
+    parser.add_argument('filename', help='Name of the file with coordinates')
 
     parser.add_argument('--config',
                         default='INPDAT',
@@ -30,8 +33,8 @@ def create_parser():
 
     parser.add_argument('--relax',
                         action='store_true',
-                        help='False: realxation of atomic positions only (default), True: '
-                             'relaxation of atomic pos.  and lat. param')
+                        help='False: realxation of atomic positions only (default), '
+                             'True: relaxation of atomic pos.  and lat. param')
 
     parser.add_argument('--cart',
                         action='store_true',
@@ -152,11 +155,14 @@ def create_parser():
     parser.add_argument('--fragcoord',
                         default=1,
                         type=int,
-                        help='if more fragments this determine what to do (0-add cartesians for '
-                             'all but the alrgest fragments, 1-add longer distances, 2-add inverse '
-                             'power distances (1/R),3-add 1/R^6). in cases of 1, 2 and 3 the '
-                             'distances are generated using BSCALE*ASCALE. new coordinates are not '
-                             'used for generation of angles, torsions etc...')
+                        help='if more fragments this determine what to do: '
+                             '  0 : add cartesians for all but the largest fragments, '
+                             '  1 : add longer distances, '
+                             '  2 : add inverse power distances (1/R), '
+                             '  3 : add 1/R^6). '
+                             'in cases of 1, 2 and 3 the distances are '
+                             'generated using BSCALE*ASCALE. new coordinates '
+                             'are not used for generation of angles, torsions etc...')
 
     parser.add_argument('--primset',
                         action='store_true',
@@ -174,15 +180,16 @@ def create_parser():
 
     parser.add_argument('--pulayguess',
                         nargs='+',
-                        help='this will be subtracted from stress tensor, makes sense only for '
-                             'full relaxations (RELAX=1)')
+                        help='this will be subtracted from stress tensor, '
+                             'makes sense only for full relaxations (RELAX=1)')
 
     parser.add_argument('--rstress',
                         nargs='+',
-                        help='if rigidstress=1: only for test purposes (replaces the actual stress '
-                             'by this line)')
+                        help='if rigidstress=1: only for test purposes '
+                             '(replaces the actual stress by this line)')
 
     return parser
+
 
 def parse_args(parser):
     'Parse the argument from the command line and from the config file'
