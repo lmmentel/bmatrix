@@ -72,6 +72,7 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
         fractional = fractional[sorted_ind]
 
     natoms = atoms.get_number_of_atoms()
+    ndof = 3 * natoms
     counts = OrderedCounter(symbols)
     atomtypes = [s.lower() for s in counts.keys()]
     atomcounts = counts.values()
@@ -93,6 +94,7 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
     # arguments that are normally set through arguments, here set by hand
     relax = False
     subst = 100
+    coordinates = 'cartesian'
 
     print('anglecrit : ', anglecrit)
     print('ascale : ', ascale)
@@ -112,9 +114,30 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
                          dtype=[('type', 'S4'), ('value', np.float32)])
 
     if return_bmatrix:
-        pass
+
+        cart_flat = np.hstack((cartesian.ravel(), cell.ravel()))
+
+        # now compute the Bmatrix (wrt. fractional coordinates!)
+        b = bmatrix.bmatrix(cart_flat[:-9], primcoords, natoms, cell, relax)
+        Bmat = b.Bmatrix
+
+        if relax:
+            transmat = np.zeros((ndof + 9, ndof + 9), dtype=float)
+            for i in range(ndof + 9):
+                transmat[i, i] = 1.0
+            transmat[0: ndof, 0: ndof] = np.kron(np.eye(natoms), cell_inv.T)
+        else:
+            transmat = np.kron(np.eye(natoms), cell_inv.T)
+
+        Bmat_c2 = np.dot(Bmat, transmat)
+
+        if coordinates == 'cartesian':
+            Bmat = Bmat_c2
+
+        return internals, Bmat
     else:
         return internals
+
 
 def main():
     'Main program'
