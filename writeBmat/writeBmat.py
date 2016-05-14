@@ -1,10 +1,13 @@
-#!/usr/bin/env python
 
-import argparse
+from __future__ import print_function
+
 import sys
 import time
+import pickle
+from collections import Counter, OrderedDict
 
 import numpy as np
+from scipy.constants import angstrom, value
 
 from math import *
 from string import *
@@ -12,29 +15,106 @@ from fpformat import *
 
 import bmatrix
 import intcoord
-import takeinpPOSCAR, various, mymath, dealxyz
+import takeinpPOSCAR
+import various
+import mymath
+import dealxyz
 import datastruct
 import inputparser
 
-from pprint import pprint
+ang2bohr = angstrom / value('atomic unit of length')
 
-#from joblib import Parallel, delayed
-#import multiprocessing
+# c the smallest acceptable non-zero matrix element
+MYTINY = 1e-6
 
-#num_cores = multiprocessing.cpu_count()
-#print("numCores = " + str(num_cores))
+
+class OrderedCounter(Counter, OrderedDict):
+    pass
+
 
 def read_matrix(fname):
     'Read an array from file'
-    matrix = np.load(fname)
+    # matrix = np.load(fname)
+    with open(fname, 'r') as fpkl:
+        matrix = pickle.load(fpkl)
     return matrix
+
 
 def write_matrix(matrix, fname):
     'Write a matrix to file'
-    np.save(fname, matrix)
+    # np.save(fname, matrix)
+    with open(fname, 'w') as fpkl:
+        pickle.dump(matrix, fpkl)
 
-#c the smallest acceptable non-zero matrix element
-MYTINY=1e-6
+
+def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0,
+                  anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
+                  cov_rad='default'):
+    '''
+    Calculate the internal coordinates and optionally the B matrix
+    for the ``atoms`` object
+
+    Args:
+        atoms : ase.Atoms
+        return_bmatrix : bool
+            If ``True`` Bmatrix will also be calculated and returned as
+            numpy.array
+    '''
+
+    symbols = np.array(atoms.get_chemical_symbols())
+    cartesian = atoms.get_positions() * ang2bohr
+    fractional = atoms.get_scaled_positions()
+
+    if sort:
+        sorted_ind = np.argsort(atoms.get_chemical_symbols())
+        symbols = symbols[sorted_ind]
+        cartesian = cartesian[sorted_ind]
+        fractional = fractional[sorted_ind]
+
+    natoms = atoms.get_number_of_atoms()
+    counts = OrderedCounter(symbols)
+    atomtypes = [s.lower() for s in counts.keys()]
+    atomcounts = counts.values()
+
+    # convert and assign the cell and cartesian coordiantes
+    cell = atoms.get_cell() * ang2bohr
+    cell_inv = np.linalg.inv(cell)
+
+    print('natoms : ', natoms)
+    print('atomtypes : ', atomtypes)
+    print('atomcounts : ', atomcounts)
+    print('cartesian : ', cartesian)
+    print('fractional : ', fractional)
+    print('cell : ', cell)
+    print('cell_inv : ', cell_inv)
+
+    cov_radii = datastruct.get_covalent_radii(atomtypes, source=cov_rad)
+
+    # arguments that are normally set through arguments, here set by hand
+    relax = False
+    subst = 100
+
+    print('anglecrit : ', anglecrit)
+    print('ascale : ', ascale)
+    print('cov_radii : ', cov_radii)
+    print('bscale : ', bscale)
+    print('fragcoord : ', fragcoord)
+    print('torsioncrit : ', torsioncrit)
+    print('torsions : ', torsions)
+
+    intrn = intcoord.Intern(atomtypes, cov_radii, ascale, bscale,
+                            anglecrit, torsioncrit, fragcoord,
+                            relax, torsions, subst, natoms,
+                            cell, fractional, cartesian, atomcounts)
+    primcoords = intrn.internalcoords
+
+    internals = np.array([(p.tag, p.value) for p in primcoords],
+                         dtype=[('type', 'S4'), ('value', np.float32)])
+
+    if return_bmatrix:
+        pass
+    else:
+        return internals
 
 def main():
     'Main program'
@@ -43,21 +123,33 @@ def main():
 
     inpt = takeinpPOSCAR.TakeInput()
     inpt.read(args.filename)
-    #inpt=takeinp.TakeInput()
-    #inpt.read("OUTCAR")
     inpt.convert_to_au()
     lattmat = inpt.lattmat
     lattinv = inpt.lattinv
     volume = inpt.volume
+
     atomquality = inpt.atomicFlags
 
-    if len(args.atradii) != len(atomquality):
-        args.atradii = []
-        COVALENTRADII = datastruct.Elementprop().covalentradii
-    for i in range(len(atomquality)):
-        index=atomquality[i]
-        args.atradii.append(COVALENTRADII[index])
+    args.atradii = datastruct.get_covalent_radii(atomquality)
+
+    ###
+
+    attrs = [attr for attr in dir(args) if not attr.startswith('_')]
+    print(' inps_ attributes '.center(80, '='))
+    for name in sorted(attrs):
+        print(name, ' : ', getattr(args, name))
+    print(' end '.center(80, '-'))
+
+    attrs = [attr for attr in dir(inpt) if not attr.startswith('_')]
+    print(' inpt attributes '.center(80, '='))
+    for name in sorted(attrs):
+        print(name, ' : ', getattr(inpt, name))
+    print(' end '.center(80, '-'))
+
+    ###
+
     atomictags=[]
+
     for i in range(inpt.ntypes):
         for j in range(inpt.types[i]):
             atomictags.append(atomquality[i])
@@ -74,13 +166,13 @@ def main():
     t0 = time.time()
 
     try:
-        primcoords=read_matrix('COORDINATES.gadget')
-        deal=dealxyz.Dealxyz(cartesian[:-9], primcoords, lattmat)
+        primcoords = read_matrix('COORDINATES.gadget')
+        deal = dealxyz.Dealxyz(cartesian[:-9], primcoords, lattmat)
         for i in range(len(primcoords)):
-            primcoords[i].value=deal.internals[i]
-        print 'Internal coordinates were read-in from the file COORDINATES.gadget'
+            primcoords[i].value = deal.internals[i]
+        print('Internal coordinates were read-in from the file COORDINATES.gadget')
     except IOError:
-        print 'Internal coordinates were newly generated'
+        print('Internal coordinates were newly generated')
         intrn = intcoord.Intern(atomquality, args.atradii, args.ascale, args.bscale, args.anglecrit,
                                 args.torsioncrit, args.fragcoord, args.relax, args.torsions,
                                 args.subst, inpt.numofatoms, inpt.lattmat, inpt.coords_d,
@@ -88,7 +180,7 @@ def main():
         primcoords = intrn.internalcoords
         write_matrix(primcoords, 'COORDINATES.gadget')
 
-    print time.time() - t0, "seconds wall time coord check"
+    print(time.time() - t0, "seconds wall time coord check")
 
     #c now compute the Bmatrix (wrt. fractional coordinates!)
     b = bmatrix.bmatrix(cartesian[:-9], primcoords, inpt.numofatoms, lattmat, args.relax)
@@ -109,13 +201,13 @@ def main():
     else:
         transmat = mymath.cd_transmatrix(lattinv, 3*inpt.numofatoms)
 
-    print time.time() - t0, "seconds wall time for Bmat computation"
+    print(time.time() - t0, "seconds wall time for Bmat computation")
 
 
     t0 = time.time()
     #Bmat_c2=matrixmultiply(Bmat,transmat)
     Bmat_c2 = np.dot(Bmat, transmat)
-    print time.time() - t0, "seconds wall time for Bmat multiplication"
+    print(time.time() - t0, "seconds wall time for Bmat multiplication")
 
     if args.coordinates == 'cartesian':
         Bmat = Bmat_c2
@@ -133,7 +225,6 @@ def main():
     row = "Coordinates (au):"
     f.write(row+'\n')
     for i in range(len(primcoords)):
-    #  row=str(primcoords[i].tag)+': '+str(primcoords[i].value)
         row=str(primcoords[i].tag)+'  '+str(primcoords[i].value)
         if primcoords[i].tag=='R' or primcoords[i].tag=="IR1" or primcoords[i].tag=="IR6":
             what=str(primcoords[i].what[0]+1)+' '+str(primcoords[i].what[1]+1)
@@ -151,11 +242,10 @@ def main():
             where+=' '+str(primcoords[i].where[2][0])+' '+str(primcoords[i].where[2][1])+' '+str(primcoords[i].where[2][2])
             where+=' '+str(primcoords[i].where[3][0])+' '+str(primcoords[i].where[3][1])+' '+str(primcoords[i].where[3][2])
         else:
-            print 'Error: unsupported coordinate type',primcoords[i].tag
+            print('Error: unsupported coordinate type',primcoords[i].tag)
             sys.exit()
-    #  row+=': '+what+': '+where
-    row+='  '+what+': '+where
-    f.write(row+'\n')
+        row+='  '+what+': '+where
+        f.write(row+'\n')
 
 
     f.write('\n')
@@ -169,9 +259,7 @@ def main():
 
     f.close()
 
-    print time.time() - t0, "seconds wall time for writing on bmat.dat"
+    print(time.time() - t0, "seconds wall time for writing on bmat.dat")
 
 if __name__ == '__main__':
     main()
-
-
