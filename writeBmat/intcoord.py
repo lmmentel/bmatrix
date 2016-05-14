@@ -12,17 +12,36 @@ class Intern:
  Identification of primitive internal coordinates.
  """
 
- def __init__(self,WATOMS,atradii_,ASCALE,BSCALE,ANGLECRIT,TORSIONCRIT,FRAGCOORD,RELAX,TORS,SUBST,numofatoms,lattmat,directs,cartesian,types):
- 
-   ASCALE=ASCALE/pC['AU2A']
-   ###COVALENTRADII=datastruct.Elementprop().covalentradii
-   self.trust=0.15 #criteria for acceptance of angle
+ def __init__(self, WATOMS, atradii_, ASCALE, BSCALE, ANGLECRIT, TORSIONCRIT,
+              FRAGCOORD, RELAX, TORS, SUBST, numofatoms, lattmat, directs,
+              cartesian, types):
 
+   verbose = False
+   if verbose:
+     print ' input args in <Intern> '.center(80, '=')
+     print 'WATOMS      : ', WATOMS
+     print 'atradii_    : ', atradii_
+     print 'ASCALE      : ', ASCALE
+     print 'BSCALE      : ', BSCALE
+     print 'ANGLECRIT   : ', ANGLECRIT
+     print 'TORSIONCRIT : ', TORSIONCRIT
+     print 'FRAGCOORD   : ', FRAGCOORD
+     print 'RELAX       : ', RELAX
+     print 'TORS        : ', TORS
+     print 'SUBST       : ', SUBST
+     print 'numofatoms  : ', numofatoms
+     print 'lattmat     : '
+     print lattmat
+     print 'directs     : '
+     print directs
+     print 'cartesian   : '
+     print cartesian
+     print 'types       : ', types
 
-   ##atradii=[]
-   ##for i in range(len(WATOMS)):
-   ##  index=WATOMS[i]
-   ##  atradii.append(COVALENTRADII[index])
+   ASCALE = ASCALE / pC['AU2A']
+   
+   self.trust = 0.15  # criteria for acceptance of angle
+
    katoms=np.array(types)/1
    if len(katoms)!=len(atradii_):
      raise IOError
@@ -35,46 +54,46 @@ class Intern:
        self.atomictags.append(WATOMS[i])
 
    #print atradii_
-   atradii=ASCALE*np.array(atradii_)
-   atrad=max(np.array(atradii))  # maximal allowed length of bond in the system
+   atradii = ASCALE * np.array(atradii_)
+   atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
 
-   self.criteria=self.set_criteria(atrad,lattmat)
-   self.pexcluded=[None,None,None]
-   self.mexcluded=[None,None,None]
-   intrawhat=[]
-   intrawhere=[]
+   self.criteria = self.set_criteria(atrad, lattmat)
+   self.pexcluded = [None, None, None]
+   self.mexcluded = [None, None, None]
+   intrawhat = []
+   intrawhere = []
 
    # intracellparameters
    for i in range(len(directs)):
      intrawhat.append(i)
-     intrawhere.append(np.array([0,0,0]))
+     intrawhere.append(np.array([0, 0, 0]))
 
    # intercell parameters
-   interdirects,interwhat,interwhere=self.inter_search(directs,self.criteria)
+   interdirects, interwhat, interwhere = self.inter_search(directs, self.criteria)
 
-   if len(interdirects)>0:
-     alldirects=np.zeros((len(directs)+len(interdirects),3),dtype=float)
-     alldirects[:len(directs)]=directs
-     alldirects[len(directs):]=interdirects
+   if len(interdirects) > 0:
+     alldirects = np.zeros((len(directs) + len(interdirects), 3), dtype=float)
+     alldirects[:len(directs)] = directs
+     alldirects[len(directs):] = interdirects
    else:
-     alldirects=directs
+     alldirects = directs
    #allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
    #allwhat[:len(intrawhat)]=intrawhat
    #allwhat[len(intrawhat):]=interwhat
-   allwhat=intrawhat+interwhat
+   allwhat = intrawhat + interwhat
    #allwhere=np.zeros((len(intrawhere)+len(interwhere)),Int)
    #allwhere[:len(intrawhere)]=intrawhere
    #allwhere[len(intrawhere):]=interwhere
-   allwhere=intrawhere+interwhere
-   allcartesian=self.dirto_cart(alldirects,lattmat) # modified cell converted to cart coords.
+   allwhere = intrawhere + interwhere
+   allcartesian = self.dirto_cart(alldirects, lattmat) # modified cell converted to cart coords.
 
-   shortradii=0.2*np.array(atradii)                         # minimal lengths
-   longradii=np.array(atradii)                        # upper limit for bond length
+   shortradii = 0.2 * np.array(atradii)                         # minimal lengths
+   longradii = np.array(atradii)                        # upper limit for bond length
 
    bonds = self.bond_lengths(cartesian, intrawhat, intrawhere,\
            allcartesian, allwhat, allwhere, shortradii, longradii, katoms, 'R')
 
-   fragments,substrate=self.frac_struct(bonds,numofatoms,SUBST)
+   fragments, substrate = self.frac_struct(bonds, numofatoms, SUBST)
 
    if len(bonds)==0:
      print 'are you sure about the at. rad.?'
