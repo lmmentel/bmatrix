@@ -69,6 +69,7 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
         cartesian = cartesian[sorted_ind]
         fractional = fractional[sorted_ind]
 
+    # set frequently used variables
     natoms = atoms.get_number_of_atoms()
     ndof = 3 * natoms
     counts = OrderedCounter(symbols)
@@ -79,28 +80,12 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
     cell = atoms.get_cell() * ang2bohr
     cell_inv = np.linalg.inv(cell)
 
-    print('natoms : ', natoms)
-    print('atomtypes : ', atomtypes)
-    print('atomcounts : ', atomcounts)
-    print('cartesian : ', cartesian)
-    print('fractional : ', fractional)
-    print('cell : ', cell)
-    print('cell_inv : ', cell_inv)
-
     cov_radii = datastruct.get_covalent_radii(atomtypes, source=cov_rad)
 
     # arguments that are normally set through arguments, here set by hand
     relax = False
     subst = 100
     coordinates = 'cartesian'
-
-    print('anglecrit : ', anglecrit)
-    print('ascale : ', ascale)
-    print('cov_radii : ', cov_radii)
-    print('bscale : ', bscale)
-    print('fragcoord : ', fragcoord)
-    print('torsioncrit : ', torsioncrit)
-    print('torsions : ', torsions)
 
     intrn = intcoord.Intern(atomtypes, cov_radii, ascale, bscale,
                             anglecrit, torsioncrit, fragcoord,
