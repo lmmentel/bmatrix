@@ -1,7 +1,7 @@
 
 from math import *
 from mymath import *
-import various,datastruct
+import datastruct
 import numpy as np
 
 class bmatrix:
@@ -13,7 +13,7 @@ class bmatrix:
         #invlat=np.transpose(lattmat)
         #invlat=inverse(invlat)
         invlat = np.linalg.inv(lattmat)
-        cartesian = various.format_change(cartesian)
+        cartesian = np.array(cartesian).reshape(len(cartesian) / 3, 3)
         dimdim1 = len(coords)
 
         if relax:

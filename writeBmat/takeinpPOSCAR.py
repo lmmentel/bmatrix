@@ -3,7 +3,6 @@
 
 from math import *
 from mymath import *
-import string
 
 import numpy as np
 

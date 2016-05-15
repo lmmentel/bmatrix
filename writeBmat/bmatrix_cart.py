@@ -10,7 +10,7 @@ class bmatrix:
    #invlat=np.transpose(lattmat)
    #invlat=inverse(invlat)
    invlat=inverse(lattmat)
-   cartesian=various.format_change(cartesian)
+   cartesian = np.array(cartesian).reshape(len(cartesian) / 3, 3)
    dimdim1=len(coords)
    if RELAX==0:
      dimdim2=numofatoms*3

@@ -16,8 +16,6 @@ from fpformat import *
 import bmatrix
 import intcoord
 import takeinpPOSCAR
-import various
-import mymath
 import dealxyz
 import datastruct
 import inputparser
@@ -155,37 +153,10 @@ def main():
 
     args.atradii = datastruct.get_covalent_radii(atomquality)
 
-    ###
+    cartesian = np.hstack((inpt.coords_c.ravel(), lattmat.ravel()))
 
-    attrs = [attr for attr in dir(args) if not attr.startswith('_')]
-    print(' inps_ attributes '.center(80, '='))
-    for name in sorted(attrs):
-        print(name, ' : ', getattr(args, name))
-    print(' end '.center(80, '-'))
-
-    attrs = [attr for attr in dir(inpt) if not attr.startswith('_')]
-    print(' inpt attributes '.center(80, '='))
-    for name in sorted(attrs):
-        print(name, ' : ', getattr(inpt, name))
-    print(' end '.center(80, '-'))
-
-    ###
-
-    atomictags=[]
-
-    for i in range(inpt.ntypes):
-        for j in range(inpt.types[i]):
-            atomictags.append(atomquality[i])
-
-    crt = various.change_format(inpt.coords_c)
-    cartesian = np.zeros(len(crt) + 9, dtype=float)
-    cartesian[:-9] = crt
-    cartesian[-9:-6] = lattmat[0]
-    cartesian[-6:-3] = lattmat[1]
-    cartesian[-3:] = lattmat[2]
-
-    #c either read-in existing definition of internal coordinates
-    #c or generate them afresh
+    # either read-in existing definition of internal coordinates
+    # or generate them afresh
     t0 = time.time()
 
     try:
@@ -220,9 +191,9 @@ def main():
         #  transmat[i][i]=1.
         for i in range(3*inpt.numofatoms + 9):
             transmat[i][i] = 1.0
-        transmat[0:3*inpt.numofatoms, 0:3*inpt.numofatoms] = mymath.cd_transmatrix(lattinv, 3*inpt.numofatoms)
+        transmat[0:3*inpt.numofatoms, 0:3*inpt.numofatoms] = np.kron(np.eye(inpt.numofatoms), lattinv.T)
     else:
-        transmat = mymath.cd_transmatrix(lattinv, 3*inpt.numofatoms)
+        transmat = np.kron(np.eye(inpt.numofatoms), lattinv.T)
 
     print(time.time() - t0, "seconds wall time for Bmat computation")
 

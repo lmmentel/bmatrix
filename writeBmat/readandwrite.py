@@ -1,8 +1,7 @@
 from fpformat import *
 import string
-#import cPickle as pickle
 import pickle
-import various,mymath
+import mymath
 
 import numpy as np
 
@@ -80,18 +79,18 @@ def read_cwhatwhere(fname,crt,lattmat):
       inttags.append(tagline)
       if tagline=='LV':
         whatline=[None]
-	whereline=[[None]]
+        whereline=[[None]]
         intwhat.append(whatline)
-	intwhere.append(whereline)
+        intwhere.append(whereline)
         continue
       if tagline=='LA' or tagline=='LR' or tagline=='LB' or tagline=='RatioLR' or tagline=='hX' or tagline=='hY' \
       or tagline=='hZ' or tagline=='X' or tagline=='Y' or tagline=='Z' or tagline=='fX' or tagline=='fY' or tagline=='fZ':
         whatline=line[1].split()
         for i in range(len(whatline)):
           whatline[i]=int(whatline[i])
-	whereline=[[None]]
-        intwhat.append(whatline)
-	intwhere.append(whereline)
+          whereline=[[None]]
+          intwhat.append(whatline)
+          intwhere.append(whereline)
         continue
 
       whatline=line[1].split()
@@ -107,7 +106,7 @@ def read_cwhatwhere(fname,crt,lattmat):
         if tagline=='A':
           delement1=various.shortest_dist(crt,lattmat,whatline[1],whatline[0])
           delement2=various.shortest_dist(crt,lattmat,whatline[1],whatline[2])
-	  delement=[delement1[1],delement1[0],delement2[1]]
+          delement=[delement1[1],delement1[0],delement2[1]]
         if tagline=='M':
           delement1=various.shortest_dist(crt,lattmat,whatline[0],whatline[1])
           delement2=various.shortest_dist(crt,lattmat,whatline[1],whatline[2])
@@ -121,17 +120,17 @@ def read_cwhatwhere(fname,crt,lattmat):
           delement1=various.shortest_dist(crt,lattmat,whatline[1],whatline[0])
           delement2=various.shortest_dist(crt,lattmat,whatline[1],whatline[2])
           delement3=various.shortest_dist(crt,lattmat,whatline[2],whatline[3])
-	  delement=[delement1[1],delement1[0],delement2[1],np.array(delement3[1])+np.array(delement2[1])]
-	if tagline=='tV':
+          delement=[delement1[1],delement1[0],delement2[1],np.array(delement3[1])+np.array(delement2[1])]
+        if tagline=='tV':
           delement1=various.shortest_dist(crt,lattmat,whatline[0],whatline[1])
           delement2=various.shortest_dist(crt,lattmat,whatline[0],whatline[2])
           delement3=various.shortest_dist(crt,lattmat,whatline[0],whatline[3])
-	  delement=[delement1[0],delement1[1],delement2[1],delement3[1]]
+          delement=[delement1[0],delement1[1],delement2[1],delement3[1]]
         if tagline=='RatioR':
           delement1=np.array(various.shortest_dist(crt,lattmat,whatline[0],whatline[1]))
           delement2=np.array(various.shortest_dist(crt,lattmat,whatline[2],whatline[3]))
           delement=[delement1[0],delement1[1],delement2[0],delement2[1]]
-	 
+
       else:
         for i in range(len(whereline)):
           whereline[i]=int(whereline[i])
@@ -156,8 +155,8 @@ def read_cwhatwhere(fname,crt,lattmat):
   wfile.close()
   return inttags,intwhat,intwhere,intcoefs,intstat,complextype
 
-def write_poscar(filename,cartcoords1,lattmat_,inpt): 
-  cartcoords3=various.format_change(cartcoords1)
+def write_poscar(filename, cartcoords1, lattmat_, inpt): 
+  cartcoords3 = np.array(cartcoords1).reshape(len(cartcoords1) / 3, 3)
   fractcoords3=mymath.cart_dir(lattmat_,cartcoords3)
   #fractcoords3=dot(cartcoords3,inverse(lattmat_))
   lattmat=lattmat_*pC['AU2A']
@@ -342,7 +341,3 @@ def read_translations(cfile):
     translations.append(line)
   ufile.close()
   return translations
-
-
-
-
