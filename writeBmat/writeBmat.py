@@ -1,6 +1,7 @@
 
 from __future__ import print_function
 
+import os
 import sys
 import time
 import pickle
@@ -30,22 +31,22 @@ class OrderedCounter(Counter, OrderedDict):
     pass
 
 
-def read_matrix(fname):
-    'Read an array from file'
-    # matrix = np.load(fname)
+def read_internals(fname):
+    'Read internal coordinates from a file'
+
     with open(fname, 'r') as fpkl:
-        matrix = pickle.load(fpkl)
-    return matrix
+        internals = pickle.load(fpkl)
+    return internals
 
 
-def write_matrix(matrix, fname):
-    'Write a matrix to file'
-    # np.save(fname, matrix)
+def write_internals(internals, fname):
+    'Write internal coordinates to a file'
+
     with open(fname, 'w') as fpkl:
-        pickle.dump(matrix, fpkl)
+        pickle.dump(internals, fpkl)
 
 
-def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0,
+def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
                   anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
                   cov_rad='default'):
     '''
@@ -54,6 +55,7 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
 
     Args:
         atoms : ase.Atoms
+            Atoms must be sorted by species
         return_bmatrix : bool
             If ``True`` Bmatrix will also be calculated and returned as
             numpy.array
@@ -62,12 +64,6 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
     symbols = np.array(atoms.get_chemical_symbols())
     cartesian = atoms.get_positions() * ang2bohr
     fractional = atoms.get_scaled_positions()
-
-    if sort:
-        sorted_ind = np.argsort(atoms.get_chemical_symbols())
-        symbols = symbols[sorted_ind]
-        cartesian = cartesian[sorted_ind]
-        fractional = fractional[sorted_ind]
 
     # set frequently used variables
     natoms = atoms.get_number_of_atoms()
@@ -87,11 +83,21 @@ def get_internals(atoms, sort=True, return_bmatrix=False, ascale=1.0, bscale=2.0
     subst = 100
     coordinates = 'cartesian'
 
-    intrn = intcoord.Intern(atomtypes, cov_radii, ascale, bscale,
-                            anglecrit, torsioncrit, fragcoord,
-                            relax, torsions, subst, natoms,
-                            cell, fractional, cartesian, atomcounts)
-    primcoords = intrn.internalcoords
+    if os.path.exists('internals.pkl'):
+        primcoords = read_internals('internals.pkl')
+
+        deal = dealxyz.Dealxyz(cartesian.ravel(), primcoords, cell)
+        for i in range(len(primcoords)):
+            primcoords[i].value = deal.internals[i]
+        print('Internal coordinates were read from the file: internals.pkl')
+    else:
+        intrn = intcoord.Intern(atomtypes, cov_radii, ascale, bscale,
+                                anglecrit, torsioncrit, fragcoord,
+                                relax, torsions, subst, natoms,
+                                cell, fractional, cartesian, atomcounts)
+        primcoords = intrn.internalcoords
+        write_internals(primcoords, 'internals.pkl')
+        print('Internal coordinates were newly generated, save to: internals.pkl')
 
     internals = np.array([(p.tag, p.value) for p in primcoords],
                          dtype=[('type', 'S4'), ('value', np.float32)])
@@ -145,7 +151,7 @@ def main():
     t0 = time.time()
 
     try:
-        primcoords = read_matrix('COORDINATES.gadget')
+        primcoords = read_internals('internals.pkl')
         deal = dealxyz.Dealxyz(cartesian[:-9], primcoords, lattmat)
         for i in range(len(primcoords)):
             primcoords[i].value = deal.internals[i]
@@ -157,7 +163,7 @@ def main():
                                 args.subst, inpt.numofatoms, inpt.lattmat, inpt.coords_d,
                                 inpt.coords_c, inpt.types)
         primcoords = intrn.internalcoords
-        write_matrix(primcoords, 'COORDINATES.gadget')
+        write_internals(primcoords, 'internals.pkl')
 
     print(time.time() - t0, "seconds wall time coord check")
 

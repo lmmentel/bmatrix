@@ -12,7 +12,7 @@ class Dealxyz:
 
   def __init__(self, cart, coords, lattmat):
   # cart must be an array!!!
-    cart = np.array(cart).reshape(len(cartesian) / 3, 3)
+    cart = np.array(cart).reshape(len(cart) / 3, 3)
     self.internals=[]
     for i in range(len(coords)):
      if coords[i].dtyp=='simple':
