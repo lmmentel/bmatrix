@@ -1,3 +1,4 @@
+
 ''' writeBmat setup script'''
 
 import sys
@@ -10,12 +11,14 @@ def readme():
         return freadme.read()
 
 setup(
+    author='Tomas Bucko',
     include_package_data = True,
     entry_points = {
         'console_scripts' : [
             'writeBmat = writeBmat.writeBmat:main',
         ]
     },
+    license='GPLv3',
     long_description = readme(),
     name = 'writeBmat',
     packages = ['writeBmat'],
@@ -28,5 +31,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Scientific/Engineering :: Physics',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
     ],
 )
