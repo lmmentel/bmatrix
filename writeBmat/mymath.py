@@ -1,8 +1,7 @@
-from __future__ import division
-
 from math import *
 
 import numpy as np
+
 
 def vector_size(vector):
    """calculates the size of the vector, 
@@ -10,6 +9,7 @@ def vector_size(vector):
    """
    d=(sum((vector)*(vector)))**0.5
    return d
+
 
 def cross_product(a,b):
    """returns the [x,y,z] components of 
@@ -19,6 +19,7 @@ def cross_product(a,b):
    y=a[2]*b[0]-b[2]*a[0]
    z=a[0]*b[1]-b[0]*a[1]
    return np.array([x,y,z])
+
 
 def mygeneralized_inverse(matrix):
   try:
@@ -47,6 +48,7 @@ def normalize_matrow(matrix):
     else: matrix[i]*=0.0
   return matrix
 
+
 def build_umat(rank):
  """builds up a unit matrix of a given rank
  """
@@ -54,6 +56,7 @@ def build_umat(rank):
  for i in range(rank):
    matrix[i][i]=1.0
  return matrix
+
 
 def orthonormalize_mat(matrix):
   """orthogonalizes the rows of the matrix
@@ -70,11 +73,12 @@ def orthonormalize_mat(matrix):
       for k in range(0,j):
         l=sizes[k]
         matrix[i]=matrix[i] - np.inner(matrix[i],matrix[l])*matrix[l]
-  norm=vector_size(matrix[i])
-  if norm>1e-05:
+        norm=vector_size(matrix[i])
+        if norm>1e-05:
           matrix[i]=matrix[i]/norm
-  else: matrix[i]=matrix[i]*0.0
+        else: matrix[i]=matrix[i]*0.0
   return matrix
+
 
 def remove_zrows(matrix):
   """removes rows with zeros
@@ -85,6 +89,7 @@ def remove_zrows(matrix):
       newmatrix.append(matrix[i])
   newmatrix = np.array(newmatrix)
   return newmatrix
+
  
 def de_cycle(prims1,prims2,coords):
   for m in range(len(coords)):
@@ -97,6 +102,7 @@ def de_cycle(prims1,prims2,coords):
       if coords[m].tag=='A':prims2[m]=abs(prims2[m])
   return prims2
 
+
 def line_def(point1,point2):
   """from two point calculates parameters
   for line in 3D. (y=k1+c1, z=k2+c2)
@@ -107,6 +113,7 @@ def line_def(point1,point2):
   c1=point1[1]-k1*point1[0]
   c2=point1[2]-k2*point1[0]
   return k1,k2,c1,c2
+
 
 def point_paraline(point,k1,k2,c1,c2):
   """given the line A defined by k1,k2,c1 and c2
@@ -119,12 +126,14 @@ def point_paraline(point,k1,k2,c1,c2):
   crosspoint=[x,y,z]
   return crosspoint
 
+
 def dir_cart(lvect,dirs):
   """transforms fractional coordinates
   to cartesians
   """
   carts=np.dot(dirs,lvect)
   return carts
+
 
 def cart_dir(lvect,carts):
   """transforms cartesian coordinates
@@ -148,7 +157,7 @@ def cd_transmatrix(lvect,dim):
   coordinates
   """
   transmat=np.zeros((dim,dim),dtype=float)
-  for i in range(dim//3):
+  for i in range(dim/3):
     transmat[3*i:3*i+3,3*i:3*i+3]=np.transpose(lvect)
   return transmat
 
@@ -192,20 +201,15 @@ def sym_threemat(mat):
 
   return mat
 
-def regr_two(x,y):
-  Xmat=np.zeros((len(x),3),dtype=float)
-  for i in range(len(Xmat)):
-    Xmat[i]=[1,x[i],x[i]**2]
-  Xtrans=np.transpose(Xmat)
-  Bmat=np.dot(Xtrans,Xmat)
-  Binv=np.linalg.inv(Bmat)
-  cvect=np.dot(Binv,Xtrans)
-  cvect=np.dot(cvect,np.transpose(y))
-  return cvect
 
+def regr_two(x, y):
 
-
-
-
-
-
+    Xmat = np.zeros((len(x), 3), dtype=float)
+    for i in range(len(Xmat)):
+        Xmat[i] = [1, x[i], x[i]**2]
+    Xtrans = np.transpose(Xmat)
+    Bmat = np.dot(Xtrans, Xmat)
+    Binv = np.linalg.inv(Bmat)
+    cvect = np.dot(Binv, Xtrans)
+    cvect = np.dot(cvect, np.transpose(y))
+    return cvect

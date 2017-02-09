@@ -1,7 +1,3 @@
-
-
-from __future__ import print_function
-
 from math import *
 import mymath
 import datastruct
@@ -10,22 +6,42 @@ import numpy as np
 
 from physconstants import physical_constants as pC
 
+
 class Intern:
  """
  Identification of primitive internal coordinates.
  """
 
- def __init__(self,WATOMS,atradii_,ASCALE,BSCALE,ANGLECRIT,TORSIONCRIT,FRAGCOORD,RELAX,TORS,SUBST,numofatoms,lattmat,directs,cartesian,types):
- 
-   ASCALE=ASCALE/pC['AU2A']
-   ###COVALENTRADII=datastruct.Elementprop().covalentradii
-   self.trust=0.15 #criteria for acceptance of angle
+ def __init__(self, WATOMS, atradii_, ASCALE, BSCALE, ANGLECRIT, TORSIONCRIT,
+              FRAGCOORD, RELAX, TORS, SUBST, numofatoms, lattmat, directs,
+              cartesian, types):
 
+   verbose = False
+   if verbose:
+     print ' input args in <Intern> '.center(80, '=')
+     print 'WATOMS      : ', WATOMS
+     print 'atradii_    : ', atradii_
+     print 'ASCALE      : ', ASCALE
+     print 'BSCALE      : ', BSCALE
+     print 'ANGLECRIT   : ', ANGLECRIT
+     print 'TORSIONCRIT : ', TORSIONCRIT
+     print 'FRAGCOORD   : ', FRAGCOORD
+     print 'RELAX       : ', RELAX
+     print 'TORS        : ', TORS
+     print 'SUBST       : ', SUBST
+     print 'numofatoms  : ', numofatoms
+     print 'lattmat     : '
+     print lattmat
+     print 'directs     : '
+     print directs
+     print 'cartesian   : '
+     print cartesian
+     print 'types       : ', types
 
-   ##atradii=[]
-   ##for i in range(len(WATOMS)):
-   ##  index=WATOMS[i]
-   ##  atradii.append(COVALENTRADII[index])
+   ASCALE = ASCALE / pC['AU2A']
+   
+   self.trust = 0.15  # criteria for acceptance of angle
+
    katoms=np.array(types)/1
    if len(katoms)!=len(atradii_):
      raise IOError
@@ -38,64 +54,63 @@ class Intern:
        self.atomictags.append(WATOMS[i])
 
    #print atradii_
-   atradii=ASCALE*np.array(atradii_)
-   atrad=max(np.array(atradii))  # maximal allowed length of bond in the system
+   atradii = ASCALE * np.array(atradii_)
+   atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
 
-   self.criteria=self.set_criteria(atrad,lattmat)
-   self.pexcluded=[None,None,None]
-   self.mexcluded=[None,None,None]
-   intrawhat=[]
-   intrawhere=[]
+   self.criteria = self.set_criteria(atrad, lattmat)
+   self.pexcluded = [None, None, None]
+   self.mexcluded = [None, None, None]
+   intrawhat = []
+   intrawhere = []
 
    # intracellparameters
    for i in range(len(directs)):
      intrawhat.append(i)
-     intrawhere.append(np.array([0,0,0]))
-     
-   # intercell parameters
-   interdirects,interwhat,interwhere=self.inter_search(directs,self.criteria)
+     intrawhere.append(np.array([0, 0, 0]))
 
-   if len(interdirects)>0:
-     alldirects=np.zeros((len(directs)+len(interdirects),3),dtype=float)
-     alldirects[:len(directs)]=directs
-     alldirects[len(directs):]=interdirects
+   # intercell parameters
+   interdirects, interwhat, interwhere = self.inter_search(directs, self.criteria)
+
+   if len(interdirects) > 0:
+     alldirects = np.zeros((len(directs) + len(interdirects), 3), dtype=float)
+     alldirects[:len(directs)] = directs
+     alldirects[len(directs):] = interdirects
    else:
-     alldirects=directs
+     alldirects = directs
    #allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
    #allwhat[:len(intrawhat)]=intrawhat
    #allwhat[len(intrawhat):]=interwhat
-   allwhat=intrawhat+interwhat
+   allwhat = intrawhat + interwhat
    #allwhere=np.zeros((len(intrawhere)+len(interwhere)),Int)
    #allwhere[:len(intrawhere)]=intrawhere
    #allwhere[len(intrawhere):]=interwhere
-   allwhere=intrawhere+interwhere
-   allcartesian=self.dirto_cart(alldirects,lattmat) # modified cell converted to cart coords.
+   allwhere = intrawhere + interwhere
+   allcartesian = self.dirto_cart(alldirects, lattmat) # modified cell converted to cart coords.
 
-   shortradii=0.2*np.array(atradii)                         # minimal lengths
-   longradii=np.array(atradii)                        # upper limit for bond length
+   shortradii = 0.2 * np.array(atradii)                         # minimal lengths
+   longradii = np.array(atradii)                        # upper limit for bond length
 
-   bonds=self.bond_lengths(cartesian,intrawhat,intrawhere,\
-   allcartesian,allwhat,allwhere,shortradii,longradii,katoms,'R')
+   bonds = self.bond_lengths(cartesian, intrawhat, intrawhere,\
+           allcartesian, allwhat, allwhere, shortradii, longradii, katoms, 'R')
 
-   fragments,substrate=self.frac_struct(bonds,numofatoms,SUBST)
-    
-   if len(bonds) == 0:
-     print('are you sure about the at. rad.?')
+   fragments, substrate = self.frac_struct(bonds, numofatoms, SUBST)
 
-   angles,iangwhat,iangwhere=self.set_angles(bonds,directs,\
-   lattmat,numofatoms,'A',ANGLECRIT)
+   if len(bonds)==0:
+     print 'are you sure about the at. rad.?'
 
+   angles, iangwhat, iangwhere = self.set_angles(bonds,directs,\
+                                 lattmat,numofatoms,'A',ANGLECRIT)
 
-   self.internalcoords=[]
-   self.longinternalcoords=[]
+   self.internalcoords = []
+   self.longinternalcoords = []
 
-   if TORS==1:
-     torsions=self.set_dihedrals(iangwhat,iangwhere,directs,lattmat,numofatoms,'T',TORSIONCRIT)
-     self.internalcoords=bonds +angles+torsions
+   if TORS == 1:
+     torsions = self.set_dihedrals(iangwhat,iangwhere,directs,lattmat,numofatoms,'T',TORSIONCRIT)
+     self.internalcoords = bonds + angles + torsions
    else:
-     self.internalcoords=bonds  +angles
-   self.bonds=bonds
-   self.angles=angles
+     self.internalcoords = bonds + angles
+   self.bonds = bonds
+   self.angles = angles
 
 #########################################################################
    if len(fragments)>1:
@@ -117,11 +132,11 @@ class Intern:
      if RELAX==1:
        for i in range(3):
          singles.append(datastruct.Complextype('simple',[1],'hX',[i],[None],\
-           [[0,0,0]],lattmat[i][0],'free'))
+             [[0,0,0]],lattmat[i][0],'free'))
          singles.append(datastruct.Complextype('simple',[1],'hY',[i],[None],\
-           [[0,0,0]],lattmat[i][1],'free'))
+             [[0,0,0]],lattmat[i][1],'free'))
          singles.append(datastruct.Complextype('simple',[1],'hZ',[i],[None],\
-           [[0,0,0]],lattmat[i][2],'free'))
+             [[0,0,0]],lattmat[i][2],'free'))
      self.internalcoords+=singles
 
    if (len(fragments)>1 or len(substrate)>0) and FRAGCOORD!=0:     
@@ -170,6 +185,7 @@ class Intern:
    criteria[2]=abs(2*atrad/cang32)
    return np.array(criteria)
 
+
  def make_exclusions(self,directs,which,criteria):
    """ Excludes those data from row_d, which do not satisfy the criteria
    which = 0,1,2 i.e. a b c; .
@@ -188,6 +204,7 @@ class Intern:
        nexclusions=nexclusions+[i]
 
    return pexclusions,nexclusions
+
 
  def multy_cell(self,directs,first,second,third,pexcluded,mexcluded):       #first, second, third - translations +/- 1
    """Consideres atoms outside cell which can form intercell bonds.
@@ -215,11 +232,13 @@ class Intern:
        intwhere.append(np.array([first,second,third]))
    return intdirects,intwhat,intwhere
 
+
  def dirto_cart(self,directs,lattmat):
    """Conversion from direct to cartesian coords.
    """
    carts=np.dot(directs,lattmat)
    return carts
+
 
  def inter_search(self,directs,criteria):
    'group of those atoms which can not form intercell bonds'
@@ -240,6 +259,7 @@ class Intern:
            interwhat=interwhat+iwhat
            interwhere=interwhere+iwhere
    return interdirects,interwhat,interwhere
+
 
  def bond_fragments(self,fragments,substrate,directs,lattmat,radii_l,katoms,tag):
    bonds=[]
@@ -279,8 +299,8 @@ class Intern:
                  ibondwhat.append([substrate[jj],fragments[i][ii]])
                  ibondwhattags.append([self.atomictags[substrate[jj]],self.atomictags[fragments[i][ii]]])
                  ibondwhere.append([[0,0,0],[t1,t2,t3]])
-   
-   
+
+
    for i in range(len(fragments)):
      for j in range(len(fragments)):
        if j>i:
@@ -319,12 +339,12 @@ class Intern:
      kk=[ibondwhat[i][0],i]
      ksort.append(kk)
    ksort.sort()
-   
+
    for i in range(len(ksort)):
      bindex=ksort[i][1]
      bonds.append(datastruct.Complextype('simple',[1],tag,ibondwhat[bindex],\
      ibondwhattags[bindex],ibondwhere[bindex],ibonds[bindex],'free'))
-   return bonds   
+   return bonds
   
   
  def bond_lengths(self,cart,what,where,allcart,allwhat,allwhere,radii_s,radii_l,katoms,tag):
@@ -410,26 +430,26 @@ class Intern:
            if angle>1: angle=1
            if angle<-1:angle=-1
            angle=abs(acos(angle))
-           #if not(sum(self.topology_matrix[iangwhat[i][k],:])>6 and sum(self.topology_matrix[iangwhat[i][l],:])>6 and sum(self.topology_matrix[i,:])>6):
-               
+           # if not(sum(self.topology_matrix[iangwhat[i][k],:])>6 and sum(self.topology_matrix[iangwhat[i][l],:])>6 and sum(self.topology_matrix[i,:])>6):
+
            if sin(angle) >self.trust:
-               if iangwhat[i][k]<iangwhat[i][l] :
-                 awhat=[iangwhat[i][k],i,iangwhat[i][l]]
-                 awhattags=[self.atomictags[iangwhat[i][k]],self.atomictags[i],self.atomictags[iangwhat[i][l]]]
-                 awhere=[iangwhere[i][k],[0,0,0],iangwhere[i][l]]
-               else:
-                 awhat=[iangwhat[i][l],i,iangwhat[i][k]]
-                 awhattags=[self.atomictags[iangwhat[i][l]],self.atomictags[i],self.atomictags[iangwhat[i][k]]]
-                 awhere=[iangwhere[i][l],[0,0,0],iangwhere[i][k]]
-                 angles.append(datastruct.Complextype('simple',[1],tag,awhat,awhattags,awhere,angle,'free'))
+             if iangwhat[i][k]<iangwhat[i][l] :
+               awhat=[iangwhat[i][k],i,iangwhat[i][l]]
+               awhattags=[self.atomictags[iangwhat[i][k]],self.atomictags[i],self.atomictags[iangwhat[i][l]]]
+               awhere=[iangwhere[i][k],[0,0,0],iangwhere[i][l]]
+             else:
+               awhat=[iangwhat[i][l],i,iangwhat[i][k]]
+               awhattags=[self.atomictags[iangwhat[i][l]],self.atomictags[i],self.atomictags[iangwhat[i][k]]]
+               awhere=[iangwhere[i][l],[0,0,0],iangwhere[i][k]]
+               angles.append(datastruct.Complextype('simple',[1],tag,awhat,awhattags,awhere,angle,'free'))
            else:
-               continue
-           #awhat=[iangwhat[i][k],iangwhat[i][l]]
-               #awhattags=[self.atomictags[iangwhat[i][k]],self.atomictags[iangwhat[i][l]]]
-           #awhere=[iangwhere[i][k],iangwhere[i][l]]
-               #emerbonds.append(datastruct.Complextype('simple',[1],'R',awhat,awhattags,\
-               #awhere,None,'free'))
-           #print 'stretched',i,awhat,awhere
+             continue
+             # awhat=[iangwhat[i][k],iangwhat[i][l]]
+             # awhattags=[self.atomictags[iangwhat[i][k]],self.atomictags[iangwhat[i][l]]]
+             # awhere=[iangwhere[i][k],iangwhere[i][l]]
+             # emerbonds.append(datastruct.Complextype('simple',[1],'R',awhat,awhattags,\
+             # awhere,None,'free'))
+             # print 'stretched',i,awhat,awhere
 
    for i in range(len(emerbonds)):
      indx1=emerbonds[i].what[0]
@@ -496,7 +516,7 @@ class Intern:
        secondwhere=np.array([0,0,0])
        for j in range(len(iangwhat[i])):
          firstwhat=iangwhat[i][j]
-         #if (len(self.topmap[secondwhat])>4 and len(self.topmap[firstwhat])>4):continue
+         # if (len(self.topmap[secondwhat])>4 and len(self.topmap[firstwhat])>4):continue
          if (len(self.topmap[secondwhat])>TORSIONCRIT and len(self.topmap[firstwhat])>TORSIONCRIT):continue
          if firstwhat==secondwhat:continue
          firstwhere=iangwhere[i][j]
@@ -505,7 +525,7 @@ class Intern:
              thirdwhat=iangwhat[i][k]
              if thirdwhat==firstwhat or thirdwhat==secondwhat:continue
              thirdwhere=iangwhere[i][k]
-         #    if len(self.topmap[thirdwhat])>4:continue
+             # if len(self.topmap[thirdwhat])>4:continue
              if (len(self.topmap[thirdwhat])>4 and len(self.topmap[firstwhat])>4):continue
              for l in range(len(iangwhat[thirdwhat])):
                fourthwhat=iangwhat[thirdwhat][l]
@@ -523,7 +543,7 @@ class Intern:
    return torsions
 
  def calculate_da(self,firstwhat,secondwhat,thirdwhat,fourthwhat,\
-         firstwhere,thirdwhere,fourthwhere,directs,lattmat):
+                  firstwhere,thirdwhere,fourthwhere,directs,lattmat):
    """Calculates dihedral angles.
    """
    if firstwhat==secondwhat or firstwhat==thirdwhat or firstwhat==fourthwhat \
@@ -614,7 +634,7 @@ class Intern:
        fract[index1].append(index2)
      self.topmap[index1].append(index2)
      self.topmap[index2].append(index1)
-   
+
    self.topology_matrix_adds=1*self.topology_matrix
 
    for i in range(numofatoms):
@@ -632,7 +652,7 @@ class Intern:
    
    substrate=[]
    if len(fractions)==1:
-     print('ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.')
+     print 'ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.'
      #! identify substrate
      fract=[]     
      for i in range(len(self.topology_matrix)):
@@ -652,10 +672,10 @@ class Intern:
                if self.topology_matrix_adds[i,j]==1: 
                  fract[ii].append(j)
        fractions=self.find_fragments(fract)
-       print('SUBSTRATE ATOMS DETECTED:',substrate)
-       print('INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED')
+       print 'SUBSTRATE ATOMS DETECTED:',substrate
+       print 'INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED'
    else:
-     print(len(fractions), 'FRAGMENTS DETECTED',)
+     print len(fractions), 'FRAGMENTS DETECTED',
    return fractions,substrate
 
  def find_fragments(self,fract):

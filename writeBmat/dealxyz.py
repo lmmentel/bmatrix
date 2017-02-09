@@ -1,6 +1,7 @@
 from math import *
-import mymath,various
+import mymath
 import numpy as np
+
 
 class Dealxyz:
   """
@@ -9,9 +10,9 @@ class Dealxyz:
   coordinates
   """
 
-  def __init__(self,cart,coords,lattmat):
+  def __init__(self, cart, coords, lattmat):
   # cart must be an array!!!
-    cart=various.format_change(cart)
+    cart = np.array(cart).reshape(len(cart) / 3, 3)
     self.internals=[]
     for i in range(len(coords)):
      if coords[i].dtyp=='simple':
@@ -179,7 +180,6 @@ class Dealxyz:
     x=np.dot(x, np.linalg.inv(lattmat))
     internal=x[xyz]
     return internal
-  
 
   def set_llength(self,intwhat,lattmat):
     index1=intwhat[0]
@@ -207,13 +207,13 @@ class Dealxyz:
 
     v1=mymath.cross_product(av,bv)
     v2=mymath.cross_product(av,cv)
-    
+
     v1=v1/sum(v1**2)**0.5
     v2=v2/sum(v2**2)**0.5
     alpha=sum(v1*v2)
     alpha=acos(alpha)
     return alpha
-  
+
   def set_lvolume(self,lattmat):
     l1=lattmat[0]
     l2=lattmat[1]
@@ -229,7 +229,7 @@ class Dealxyz:
     llengthb=(sum(lattmat[index2]*lattmat[index2]))**0.5
     ratio=llengtha/llengthb
     return ratio
-    
+
   def set_sum(self,cart,coord,lattmat):
     complexcoord=0.0
     for i in range(len(coord.tag)):
@@ -313,6 +313,7 @@ class Dealxyz:
           #dist=coord.value
           dist=self.set_lengths(cart,coord.what[i],coord.where[i],lattmat)
           dummyq=dist/coord.coefs[i]
-          if abs(dummyq-1.0)<1e-4: dummyq=1.0001
+          if abs(dummyq - 1.0) < 1.0e-4:
+            dummyq = 1.0001
           complexcoord=complexcoord+(1.0-dummyq**9.)/(1.0-dummyq**14.)
     return complexcoord
