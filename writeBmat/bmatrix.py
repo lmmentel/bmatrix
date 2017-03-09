@@ -1,6 +1,5 @@
 
 from math import *
-from mymath import *
 import datastruct
 import numpy as np
 

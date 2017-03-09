@@ -1,5 +1,6 @@
+
 from math import *
-import mymath
+
 import datastruct
 
 import numpy as np
@@ -568,7 +569,7 @@ class Intern:
      vector2size=np.linalg.norm(vector2)
      vector3size=np.linalg.norm(vector3)
 
-     cross1=np.cross(vector1,vector2) #function from mymath
+     cross1=np.cross(vector1,vector2)
      cross2=np.cross(vector2,vector3)
      cross1_size=np.linalg.norm(cross1)
      cross2_size=np.linalg.norm(cross2)

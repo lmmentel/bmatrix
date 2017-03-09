@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 from math import *
-from mymath import *
+
 
 import numpy as np
 
@@ -21,7 +21,7 @@ class TakeInput:
    self.comment="" # comment written at the beginning of POSCAR
    self.numofatoms=0 # total number of atoms in the system
    self.ntypes=0 # number of types
-   self.types=[] # number of atoms of each type 
+   self.types=[] # number of atoms of each type
    self.atomicFlags=[] # flags corresponding to different types
    self.atomicMass=[] # mass for each atomic type (amu)
    self.scaling=1.
@@ -45,8 +45,8 @@ class TakeInput:
    self.energy/=pC['Hartree2eV']
    if len(self.stress)>0:self.stress/=pC['Hartree2eV']
    if len(self.gradients)>0:self.gradients*=pC['AU2A']/pC['Hartree2eV']
-  
- def read(self,ifile): 
+
+ def read(self,ifile):
    dum=1
    local_dire=None
    coordtype='direct'
@@ -79,8 +79,8 @@ class TakeInput:
        self.lattinv = np.linalg.inv(self.lattmat)
        self.volume=cross_product(lattmat_tmp[0],lattmat_tmp[1])
        self.volume=abs(sum(self.volume*lattmat_tmp[2]))
-       self.atomicFlags=line  
-     if i==7:  
+       self.atomicFlags=line
+     if i==7:
        katoms=[]
        for j in range(len(line)):
          katoms.append(int(line[j]))
@@ -96,7 +96,7 @@ class TakeInput:
 
        indx=(i)%(self.numofatoms+8)
        if (indx==0): indx=self.numofatoms+8
-       #if indx<=2 or indx==6 or indx==7 or indx==8: 
+       #if indx<=2 or indx==6 or indx==7 or indx==8:
        #  break
        if (indx==1):
          break

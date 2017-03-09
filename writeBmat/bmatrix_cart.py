@@ -1,6 +1,8 @@
+
 from math import *
-from mymath import *
-import various,datastruct
+
+import datastruct
+
 import numpy as np
 
 

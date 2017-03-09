@@ -1,5 +1,6 @@
+
 from math import *
-import mymath
+
 import numpy as np
 
 
