@@ -4,91 +4,95 @@ import numpy as np
 
 
 def vector_size(vector):
-   """calculates the size of the vector, 
-   takes array as the argument!!!
-   """
-   d=(sum((vector)*(vector)))**0.5
-   return d
+    """calculates the size of the vector,
+    takes array as the argument!!!
+    """
+
+    d = (sum((vector) * (vector)))**0.5
+    return d
 
 
-def cross_product(a,b):
-   """returns the [x,y,z] components of 
-   the cross product
-   """
-   x=a[1]*b[2]-b[1]*a[2]
-   y=a[2]*b[0]-b[2]*a[0]
-   z=a[0]*b[1]-b[0]*a[1]
-   return np.array([x,y,z])
+def cross_product(a, b):
+    """returns the [x,y,z] components of
+    the cross product
+    """
+
+    x = a[1] * b[2] - b[1] * a[2]
+    y = a[2] * b[0] - b[2] * a[0]
+    z = a[0] * b[1] - b[0] * a[1]
+    return np.array([x, y, z])
 
 
 def mygeneralized_inverse(matrix):
-  try:
-    val, vect = np.linalg.eigh(matrix)
-  except np.linalg.LinAlgError:
-  #except  LinearAlgebraError:
-    invmatrix = np.linalg.inv(matrix)
-  else:
-    dim=len(matrix)
-    invmatrix = np.zeros((dim,dim), dtype=float)
-    for i in range(dim):
-      if abs(val[i])>1e-7:
-        invmatrix[i][i]=1/val[i]
-    invmatrix=np.dot(np.transpose(vect),invmatrix)
-    invmatrix=np.dot(invmatrix,vect)
-  return invmatrix
+
+    try:
+        val, vect = np.linalg.eigh(matrix)
+    except np.linalg.LinAlgError:
+        invmatrix = np.linalg.inv(matrix)
+    else:
+        dim = len(matrix)
+        invmatrix = np.zeros((dim, dim), dtype=float)
+        for i in range(dim):
+            if abs(val[i]) > 1e-7:
+                invmatrix[i][i] = 1 / val[i]
+        invmatrix = np.dot(np.transpose(vect), invmatrix)
+        invmatrix = np.dot(invmatrix, vect)
+    return invmatrix
 
 
 def normalize_matrow(matrix):
-  """normalizes rows in matrix
-  """
-  for i in range(len(matrix)):
-    norm=vector_size(matrix[i])
-    if norm>1e-05:
-      matrix[i]=matrix[i]/norm
-    else: matrix[i]*=0.0
-  return matrix
+    'normalizes rows in matrix'
+
+    for i in range(len(matrix)):
+        norm = vector_size(matrix[i])
+        if norm > 1e-05:
+            matrix[i] = matrix[i] / norm
+        else:
+            matrix[i] *= 0.0
+    return matrix
 
 
 def build_umat(rank):
- """builds up a unit matrix of a given rank
- """
- matrix=np.zeros((rank,rank),dtype=float)
- for i in range(rank):
-   matrix[i][i]=1.0
- return matrix
+    'builds up a unit matrix of a given rank'
+
+    matrix = np.zeros((rank, rank), dtype=float)
+    for i in range(rank):
+        matrix[i][i] = 1.0
+    return matrix
 
 
 def orthonormalize_mat(matrix):
-  """orthogonalizes the rows of the matrix
-  """
-  matrix=normalize_matrow(matrix)
-  sizes=[]
-  for i in range(len(matrix)):
-    s=vector_size(matrix[i])
-    if s>1e-05:
-      sizes.append(i)
-  if len(sizes)>1:
-    for j in range(1,len(sizes)):
-      i=sizes[j]
-      for k in range(0,j):
-        l=sizes[k]
-        matrix[i]=matrix[i] - np.inner(matrix[i],matrix[l])*matrix[l]
-        norm=vector_size(matrix[i])
-        if norm>1e-05:
-          matrix[i]=matrix[i]/norm
-        else: matrix[i]=matrix[i]*0.0
-  return matrix
+    'orthogonalizes the rows of the matrix'
+
+    matrix = normalize_matrow(matrix)
+    sizes = []
+    for i in range(len(matrix)):
+        s = vector_size(matrix[i])
+        if s > 1e-05:
+            sizes.append(i)
+    if len(sizes) > 1:
+        for j in range(1, len(sizes)):
+            i = sizes[j]
+            for k in range(0, j):
+                l = sizes[k]
+                matrix[i] = matrix[i] - np.inner(matrix[i], matrix[l]) * matrix[l]
+                norm = vector_size(matrix[i])
+                if norm > 1e-05:
+                    matrix[i] = matrix[i] / norm
+                else:
+                    matrix[i] = matrix[i] * 0.0
+    return matrix
 
 
 def remove_zrows(matrix):
-  """removes rows with zeros
-  """
-  newmatrix=[]
-  for i in range(len(matrix)):
-    if vector_size(matrix[i])>1e-06:
-      newmatrix.append(matrix[i])
-  newmatrix = np.array(newmatrix)
-  return newmatrix
+    'removes rows with zeros'
+
+    newmatrix = []
+    for i in range(len(matrix)):
+        if vector_size(matrix[i]) > 1e-06:
+            newmatrix.append(matrix[i])
+    newmatrix = np.array(newmatrix)
+    return newmatrix
 
  
 def de_cycle(prims1,prims2,coords):
