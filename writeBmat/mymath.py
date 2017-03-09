@@ -12,17 +12,6 @@ def vector_size(vector):
     return d
 
 
-def cross_product(a, b):
-    """returns the [x,y,z] components of
-    the cross product
-    """
-
-    x = a[1] * b[2] - b[1] * a[2]
-    y = a[2] * b[0] - b[2] * a[0]
-    z = a[0] * b[1] - b[0] * a[1]
-    return np.array([x, y, z])
-
-
 def mygeneralized_inverse(matrix):
 
     try:
@@ -94,7 +83,7 @@ def remove_zrows(matrix):
     newmatrix = np.array(newmatrix)
     return newmatrix
 
- 
+
 def de_cycle(prims1,prims2,coords):
   for m in range(len(coords)):
     if coords[m].dtyp=='simple':

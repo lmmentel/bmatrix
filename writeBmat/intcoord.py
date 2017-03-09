@@ -39,7 +39,7 @@ class Intern:
      print 'types       : ', types
 
    ASCALE = ASCALE / pC['AU2A']
-   
+
    self.trust = 0.15  # criteria for acceptance of angle
 
    katoms=np.array(types)/1
@@ -139,13 +139,13 @@ class Intern:
              [[0,0,0]],lattmat[i][2],'free'))
      self.internalcoords+=singles
 
-   if (len(fragments)>1 or len(substrate)>0) and FRAGCOORD!=0:     
+   if (len(fragments)>1 or len(substrate)>0) and FRAGCOORD!=0:
      longradii=BSCALE*atradii
      for i in range(len(longradii)):
        if WATOMS[i]=='H':longradii[i]*=2.0
-       
+
      longbonds=self.bond_fragments(fragments,substrate,directs,lattmat,longradii,katoms,'R')
-     
+
      if FRAGCOORD==2:
        for j in range(len(longbonds)):
          longbonds[j].value=5/longbonds[j].value
@@ -154,7 +154,7 @@ class Intern:
          for j in range(len(longbonds)):
            longbonds[j].value=2000/longbonds[j].value**6
            longbonds[j].tag='IR6'
-       
+
      for i in range(len(longbonds)):
        self.internalcoords+=[longbonds[i]]
        self.longinternalcoords+=[longbonds[i]]
@@ -170,9 +170,9 @@ class Intern:
 
    criteria=[None,None,None]
    "creates cutoff criterion"
-   norm1=mymath.cross_product(lattmat[1],lattmat[2])          # normal vector to the 23 plane
-   norm2=mymath.cross_product(lattmat[2],lattmat[0])          # normal vector to the 31 plane
-   norm3=mymath.cross_product(lattmat[0],lattmat[1])          # normal vector to the 12 plane
+   norm1=np.cross(lattmat[1],lattmat[2])          # normal vector to the 23 plane
+   norm2=np.cross(lattmat[2],lattmat[0])          # normal vector to the 31 plane
+   norm3=np.cross(lattmat[0],lattmat[1])          # normal vector to the 12 plane
 
    norm1=norm1/mymath.vector_size(norm1)                         # normalized norm1
    norm2=norm2/mymath.vector_size(norm2)                           # normalized norm2
@@ -269,7 +269,7 @@ class Intern:
    ibondwhere=[]
    #if (len(fragments)<2): return bonds
    if (len(fragments)<2 and len(substrate)==0): return bonds
-   
+
    for jj in range(len(substrate)):
      target=0
      while substrate[jj]>=katoms[target]:
@@ -304,7 +304,7 @@ class Intern:
    for i in range(len(fragments)):
      for j in range(len(fragments)):
        if j>i:
-       #if j>=i: 
+       #if j>=i:
          for ii in range(len(fragments[i])):
            target=0
            while fragments[i][ii]>=katoms[target]:
@@ -345,8 +345,8 @@ class Intern:
      bonds.append(datastruct.Complextype('simple',[1],tag,ibondwhat[bindex],\
      ibondwhattags[bindex],ibondwhere[bindex],ibonds[bindex],'free'))
    return bonds
-  
-  
+
+
  def bond_lengths(self,cart,what,where,allcart,allwhat,allwhere,radii_s,radii_l,katoms,tag):
    """Finds and calculates bond lengths.
    """
@@ -568,8 +568,8 @@ class Intern:
      vector2size=mymath.vector_size(vector2)
      vector3size=mymath.vector_size(vector3)
 
-     cross1=mymath.cross_product(vector1,vector2) #function from mymath
-     cross2=mymath.cross_product(vector2,vector3)
+     cross1=np.cross(vector1,vector2) #function from mymath
+     cross2=np.cross(vector2,vector3)
      cross1_size=mymath.vector_size(cross1)
      cross2_size=mymath.vector_size(cross2)
 
@@ -593,7 +593,7 @@ class Intern:
        if sum(cross1*vector3)>=0: dangle=-dangle
        if abs(sin(alph1))>self.trust and abs(sin(alph2))>self.trust: # and abs(sin(dangle))>self.trust:
          return dangle
-       
+
      return None
 
  def za_pis(self,internals):
@@ -649,12 +649,12 @@ class Intern:
       if dummy==1:self.topology[i]=0
 
    fractions=self.find_fragments(fract)
-   
+
    substrate=[]
    if len(fractions)==1:
      print 'ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.'
      #! identify substrate
-     fract=[]     
+     fract=[]
      for i in range(len(self.topology_matrix)):
        if sum(self.topology_matrix[i])>=SUBST:
          self.topology_matrix_adds[i,:]=0
@@ -668,8 +668,8 @@ class Intern:
          if fract[ii][0]!=None:
            i=fract[ii][0]
            for j in range(numofatoms):
-             if j>i: 
-               if self.topology_matrix_adds[i,j]==1: 
+             if j>i:
+               if self.topology_matrix_adds[i,j]==1:
                  fract[ii].append(j)
        fractions=self.find_fragments(fract)
        print 'SUBSTRATE ATOMS DETECTED:',substrate
@@ -717,7 +717,7 @@ class Intern:
        indx=3*i+j
        singles[indx]=cartusa[j]
    return singles
-   
+
 
 
 

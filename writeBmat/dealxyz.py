@@ -143,8 +143,8 @@ class Dealxyz:
         vector1 = a - b
         vector2 = b - c
         vector3 = c - d
-        cross1 = mymath.cross_product(vector1, vector2)
-        cross2 = mymath.cross_product(vector2, vector3)
+        cross1 = np.cross(vector1, vector2)
+        cross2 = np.cross(vector2, vector3)
         cross1_size = mymath.vector_size(cross1)
         cross2_size = mymath.vector_size(cross2)
         fuck = sum(cross1 * cross2) / (cross1_size * cross2_size)
@@ -174,7 +174,7 @@ class Dealxyz:
         vector2 = c - a
         vector3 = d - a
 
-        cross1 = mymath.cross_product(vector1, vector2)
+        cross1 = np.cross(vector1, vector2)
         tv = abs(sum(cross1 * vector3) / 6)
         return tv
 
@@ -219,8 +219,8 @@ class Dealxyz:
         bv = lattmat[b]
         cv = lattmat[c]
 
-        v1 = mymath.cross_product(av, bv)
-        v2 = mymath.cross_product(av, cv)
+        v1 = np.cross(av, bv)
+        v2 = np.cross(av, cv)
 
         v1 = v1 / sum(v1**2)**0.5
         v2 = v2 / sum(v2**2)**0.5
@@ -233,7 +233,7 @@ class Dealxyz:
         l1 = lattmat[0]
         l2 = lattmat[1]
         l3 = lattmat[2]
-        volume = mymath.cross_product(l1, l2)
+        volume = np.cross(l1, l2)
         volume = sum(volume * l3)
         return volume
 

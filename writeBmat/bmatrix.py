@@ -4,6 +4,7 @@ from mymath import *
 import datastruct
 import numpy as np
 
+
 class bmatrix:
     """
     Jacobi matrix for x->q conversion
@@ -22,7 +23,8 @@ class bmatrix:
             dimdim2 = numofatoms * 3
 
         self.Bmatrix = np.zeros((dimdim1, dimdim2), dtype=float)
-        derstep=0.00001
+        derstep = 0.00001
+
         #self.prepare_lnum(cartesian,lengths,intwhat,intwhere,lattmat,derstep)
         #self.prepare_anum(cartesian,angles,lengths,intwhat,intwhere,lattmat,derstep)
         #self.prepare_dhnum(cartesian,dihs,angles,intwhat,intwhere,lattmat,derstep)
@@ -306,8 +308,8 @@ class bmatrix:
         e12=r12/dr12   # unit vector r12
         e23=r23/dr23   # unit vector r23
         e34=r34/dr34   # unit vector r34
-        e12xe23=cross_product(e12,e23)
-        e23xe34=cross_product(e23,e34)
+        e12xe23=np.cross(e12,e23)
+        e23xe34=np.cross(e23,e34)
         st1_c=-e12xe23/(dr12*sinpsi2**2)
         st4_c=e23xe34/(dr34*sinpsi3**2)
         part1=(dr23+dr12*cospsi2)/(dr12*dr23*sinpsi2)
@@ -368,9 +370,9 @@ class bmatrix:
         vector2=c-a
         vector3=d-a
 
-        st2_c=cross_product(vector2,vector3)/6
-        st3_c=cross_product(vector3,vector1)/6
-        st4_c=cross_product(vector1,vector2)/6
+        st2_c=np.cross(vector2,vector3)/6
+        st3_c=np.cross(vector3,vector1)/6
+        st4_c=np.cross(vector1,vector2)/6
         st1_c=-(st2_c+st3_c+st4_c)
 
         #volume must be positive - change sign if needed
@@ -482,8 +484,8 @@ class bmatrix:
         b2=c*aa-a*ac
         b3=b*aa-a*ba
 
-        axb=cross_product(a,b)
-        axc=cross_product(a,c)
+        axb=np.cross(a,b)
+        axc=np.cross(a,c)
 
         naxb=sum(axb**2)**0.5
         naxc=sum(axc**2)**0.5
@@ -540,9 +542,9 @@ class bmatrix:
         l1=lattmat[0]
         l2=lattmat[1]
         l3=lattmat[2]
-        dl1=cross_product(l2,l3)
-        dl2=cross_product(l3,l1)
-        dl3=cross_product(l1,l2)
+        dl1=np.cross(l2,l3)
+        dl2=np.cross(l3,l1)
+        dl3=np.cross(l1,l2)
         BROW[-9:-6]=dl1
         BROW[-6:-3]=dl2
         BROW[-3:]=dl3
@@ -675,8 +677,8 @@ class bmatrix:
         e12=r12/dr12   # unit vector r12
         e23=r23/dr23   # unit vector r23
         e34=r34/dr34   # unit vector r34
-        e12xe23=cross_product(e12,e23)
-        e23xe34=cross_product(e23,e34)
+        e12xe23=np.cross(e12,e23)
+        e23xe34=np.cross(e23,e34)
         #if e12xe23!=0 and e23xe34!=0:
         fuck=sum(e12xe23*e23xe34)/(vector_size(e12xe23)*vector_size(e23xe34))
         if fuck>1:
@@ -825,8 +827,8 @@ class bmatrix:
                 vector1=a-b
                 vector2=b-c
                 vector3=c-d
-                cross1=cross_product(vector1,vector2)
-                cross2=cross_product(vector2,vector3)
+                cross1=np.cross(vector1,vector2)
+                cross2=np.cross(vector2,vector3)
                 cross1_size=vector_size(cross1)
                 cross2_size=vector_size(cross2)
                 fuck=sum(cross1*cross2)/(cross1_size*cross2_size)
