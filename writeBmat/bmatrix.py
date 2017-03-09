@@ -10,8 +10,7 @@ class bmatrix:
     """
 
     def __init__(self, cartesian, coords, numofatoms, lattmat, relax):
-        #invlat=np.transpose(lattmat)
-        #invlat=inverse(invlat)
+
         invlat = np.linalg.inv(lattmat)
         cartesian = np.array(cartesian).reshape(len(cartesian) / 3, 3)
         dimdim1 = len(coords)
@@ -22,17 +21,18 @@ class bmatrix:
             dimdim2 = numofatoms * 3
 
         self.Bmatrix = np.zeros((dimdim1, dimdim2), dtype=float)
-        derstep = 0.00001
 
-        #self.prepare_lnum(cartesian,lengths,intwhat,intwhere,lattmat,derstep)
-        #self.prepare_anum(cartesian,angles,lengths,intwhat,intwhere,lattmat,derstep)
-        #self.prepare_dhnum(cartesian,dihs,angles,intwhat,intwhere,lattmat,derstep)
+        # derstep = 0.00001
+        # self.prepare_lnum(cartesian,lengths,intwhat,intwhere,lattmat,derstep)
+        # self.prepare_anum(cartesian,angles,lengths,intwhat,intwhere,lattmat,derstep)
+        # self.prepare_dhnum(cartesian,dihs,angles,intwhat,intwhere,lattmat,derstep)
+
         for i in range(len(coords)):
             BROW = np.zeros((dimdim2), dtype=float)
-            if coords[i].dtyp=='simple':
-                if coords[i].tag=='X':
-                    self.Bmatrix[i]=self.prepare_sing(cartesian,coords[i],0,lattmat,invlat,BROW)
-                elif coords[i].tag=='Y':
+            if coords[i].dtyp == 'simple':
+                if coords[i].tag == 'X':
+                    self.Bmatrix[i] = self.prepare_sing(cartesian,coords[i],0,lattmat,invlat,BROW)
+                elif coords[i].tag == 'Y':
                     self.Bmatrix[i]=self.prepare_sing(cartesian,coords[i],1,lattmat,invlat,BROW)
                 elif coords[i].tag=='Z':
                     self.Bmatrix[i]=self.prepare_sing(cartesian,coords[i],2,lattmat,invlat,BROW)
@@ -94,38 +94,38 @@ class bmatrix:
         b = cartesian[coord.what[1]] + np.dot(coord.where[1], lattmat)
         vector = a - b
         dist = np.linalg.norm(vector)
-        dl_c = (a - b)/dist
+        dl_c = (a - b) / dist
         dl = np.dot(dl_c, np.transpose(lattmat))
 
-        if coord.what[0]!=coord.what[1]:
-            column=coord.what[0]*3
-            BROW[column]=dl[0]
-            BROW[column+1]=dl[1]
-            BROW[column+2]=dl[2]
-            column=coord.what[1]*3
-            BROW[column]=-dl[0]
-            BROW[column+1]=-dl[1]
-            BROW[column+2]=-dl[2]
+        if coord.what[0] != coord.what[1]:
+            column = coord.what[0] * 3
+            BROW[column] = dl[0]
+            BROW[column + 1] = dl[1]
+            BROW[column + 2] = dl[2]
+            column = coord.what[1] * 3
+            BROW[column] = -dl[0]
+            BROW[column + 1] = -dl[1]
+            BROW[column + 2] = -dl[2]
 
-        if len(BROW)==3*len(cartesian)+9:
-            cmat=np.zeros((2,3),dtype=float)
-            cmat[0]=a
-            cmat[1]=b
-            dmat = np.dot(cmat,invlat) #-0.5
+        if len(BROW) == 3 * len(cartesian) + 9:
+            cmat = np.zeros((2, 3), dtype=float)
+            cmat[0] = a
+            cmat[1] = b
+            dmat = np.dot(cmat, invlat)   # -0.5
             for i in range(3):
-                if dmat[0][i]>1 or dmat[0][i]<0.0:
-                    dmat[:,i]-=dmat[0][i]-dmat[0][i]%1
-            dmat-=0.5
-            deriv=np.zeros((2,3),dtype=float)
-            deriv[0]=dl_c
-            deriv[1]=-dl_c
-            latderiv = np.dot(np.transpose(dmat),deriv)
-            BROW[-9:-6]=latderiv[0]
-            BROW[-6:-3]=latderiv[1]
-            BROW[-3:]=latderiv[2]
+                if dmat[0][i] > 1 or dmat[0][i] < 0.0:
+                    dmat[:, i] -= dmat[0][i] - dmat[0][i] % 1
+            dmat -= 0.5
+            deriv = np.zeros((2, 3), dtype=float)
+            deriv[0] = dl_c
+            deriv[1] = -dl_c
+            latderiv = np.dot(np.transpose(dmat), deriv)
+            BROW[-9:-6] = latderiv[0]
+            BROW[-6:-3] = latderiv[1]
+            BROW[-3:] = latderiv[2]
         return BROW
 
-    def prepare_m(self,cartesian,coord,lattmat,invlat,BROW):
+    def prepare_m(self, cartesian, coord, lattmat, invlat, BROW):
         """
         Calculates length components of the B matrix.
         """
@@ -176,24 +176,24 @@ class bmatrix:
 
         return BROW
 
-    def prepare_ratior(self,cartesian,coord,lattmat,invlat,BROW):
+    def prepare_ratior(self, cartesian, coord, lattmat, invlat, BROW):
         """
         Ratio between two bond lengths
         """
 
-        a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
-        b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
-        c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
-        d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
-        vector1=a-b
-        vector2=c-d
-        dist1=np.linalg.norm(vector1)
-        dist2=np.linalg.norm(vector2)
-        tmp1=coord.what
-        tmp2=coord.where
-        coord_=coord
-        coord_.what=tmp1[:2]
-        coord_.where=tmp2[:2]
+        a = cartesian[coord.what[0]] + np.dot(coord.where[0], lattmat)
+        b = cartesian[coord.what[1]] + np.dot(coord.where[1], lattmat)
+        c = cartesian[coord.what[2]] + np.dot(coord.where[2], lattmat)
+        d = cartesian[coord.what[3]] + np.dot(coord.where[3], lattmat)
+        vector1 = a - b
+        vector2 = c - d
+        dist1 = np.linalg.norm(vector1)
+        dist2 = np.linalg.norm(vector2)
+        tmp1 = coord.what
+        tmp2 = coord.where
+        coord_ = coord
+        coord_.what = tmp1[:2]
+        coord_.where = tmp2[:2]
         dr1=self.prepare_l(cartesian,coord_,lattmat,invlat,np.zeros(len(BROW),dtype=float))
         coord_.what=tmp1[2:]
         coord_.where=tmp2[2:]
