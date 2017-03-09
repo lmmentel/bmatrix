@@ -174,9 +174,9 @@ class Intern:
    norm2=np.cross(lattmat[2],lattmat[0])          # normal vector to the 31 plane
    norm3=np.cross(lattmat[0],lattmat[1])          # normal vector to the 12 plane
 
-   norm1=norm1/mymath.vector_size(norm1)                         # normalized norm1
-   norm2=norm2/mymath.vector_size(norm2)                           # normalized norm2
-   norm3=norm3/mymath.vector_size(norm3)                          # normalized norm3
+   norm1=norm1/np.linalg.norm(norm1)                         # normalized norm1
+   norm2=norm2/np.linalg.norm(norm2)                           # normalized norm2
+   norm3=norm3/np.linalg.norm(norm3)                          # normalized norm3
    cang10=sum(norm1*lattmat[0])                    # cos of angle between norm1 and lattmat[0]
    cang21=sum(norm2*lattmat[1])                    # cos of angle between norm2 and lattmat[1]
    cang32=sum(norm3*lattmat[2])                    # cos of angle between norm3 and lattmat[2]
@@ -358,7 +358,7 @@ class Intern:
    for i in range(len(what)):
      for j in range(len(allcart)):
        diffvec=cart[what[i]]-allcart[j]
-       length=mymath.vector_size(diffvec)
+       length=np.linalg.norm(diffvec)
        target=0
        while what[i]>=katoms[target]:
          target=target+1
@@ -418,7 +418,7 @@ class Intern:
        windex=iangwhat[i][j]
        vec=directs[i]-(directs[windex]+iangwhere[i][j])
        vec=np.dot(vec,lattmat)
-       value=mymath.vector_size(vec)
+       value=np.linalg.norm(vec)
        both=[vec,value]
        vectors.append(both)
      for k in range(len(vectors)):
@@ -555,7 +555,7 @@ class Intern:
    c=directs[thirdwhat]+thirdwhere
    d=directs[fourthwhat]+fourthwhere
 
-   checkpoint=mymath.vector_size(a-d)
+   checkpoint=np.linalg.norm(a-d)
    if checkpoint !=0:
      vector1=a-b
      vector2=b-c
@@ -564,14 +564,14 @@ class Intern:
      vector2=np.dot(vector2,lattmat)
      vector3=np.dot(vector3,lattmat)
 
-     vector1size=mymath.vector_size(vector1)
-     vector2size=mymath.vector_size(vector2)
-     vector3size=mymath.vector_size(vector3)
+     vector1size=np.linalg.norm(vector1)
+     vector2size=np.linalg.norm(vector2)
+     vector3size=np.linalg.norm(vector3)
 
      cross1=np.cross(vector1,vector2) #function from mymath
      cross2=np.cross(vector2,vector3)
-     cross1_size=mymath.vector_size(cross1)
-     cross2_size=mymath.vector_size(cross2)
+     cross1_size=np.linalg.norm(cross1)
+     cross2_size=np.linalg.norm(cross2)
 
      treshold1=cross1_size/(vector1size*vector2size)
      treshold2=cross2_size/(vector2size*vector3size)

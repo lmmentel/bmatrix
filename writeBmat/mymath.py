@@ -3,15 +3,6 @@ from math import *
 import numpy as np
 
 
-def vector_size(vector):
-    """calculates the size of the vector,
-    takes array as the argument!!!
-    """
-
-    d = (sum((vector) * (vector)))**0.5
-    return d
-
-
 def cart_dir(lvect, carts):
     """
     Transforms cartesian coordinates to fractional

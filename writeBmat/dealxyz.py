@@ -119,8 +119,8 @@ class Dealxyz:
         vector1 = a - b
         vector2 = c - b
 
-        size1 = mymath.vector_size(vector1)
-        size2 = mymath.vector_size(vector2)
+        size1 = np.linalg.norm(vector1)
+        size2 = np.linalg.norm(vector2)
         angle = sum(vector1 * vector2) / (size1 * size2)
         if angle > 1:
             angle = 1
@@ -145,8 +145,8 @@ class Dealxyz:
         vector3 = c - d
         cross1 = np.cross(vector1, vector2)
         cross2 = np.cross(vector2, vector3)
-        cross1_size = mymath.vector_size(cross1)
-        cross2_size = mymath.vector_size(cross2)
+        cross1_size = np.linalg.norm(cross1)
+        cross2_size = np.linalg.norm(cross2)
         fuck = sum(cross1 * cross2) / (cross1_size * cross2_size)
         if fuck > 1:
             fuck = 1.0
@@ -204,8 +204,8 @@ class Dealxyz:
         b = intwhat[1]
         diffav = lattmat[a]
         diffbv = lattmat[b]
-        d1 = mymath.vector_size(diffav)
-        d2 = mymath.vector_size(diffbv)
+        d1 = np.linalg.norm(diffav)
+        d2 = np.linalg.norm(diffbv)
         cosalpha = (sum(diffav * diffbv) / (d1 * d2))
         alpha = acos(cosalpha)
         return alpha

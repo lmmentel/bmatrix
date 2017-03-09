@@ -94,7 +94,7 @@ class bmatrix:
         a = cartesian[coord.what[0]] + np.dot(coord.where[0], lattmat)
         b = cartesian[coord.what[1]] + np.dot(coord.where[1], lattmat)
         vector = a - b
-        dist = vector_size(vector)
+        dist = np.linalg.norm(vector)
         dl_c = (a - b)/dist
         dl = np.dot(dl_c, np.transpose(lattmat))
 
@@ -188,8 +188,8 @@ class bmatrix:
         d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
         vector1=a-b
         vector2=c-d
-        dist1=vector_size(vector1)
-        dist2=vector_size(vector2)
+        dist1=np.linalg.norm(vector1)
+        dist2=np.linalg.norm(vector2)
         tmp1=coord.what
         tmp2=coord.where
         coord_=coord
@@ -212,7 +212,7 @@ class bmatrix:
         a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
         b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
         vector=a-b
-        dist=vector_size(vector)
+        dist=np.linalg.norm(vector)
         BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
         BROW=-5*BROW/dist**2
         return BROW
@@ -225,7 +225,7 @@ class bmatrix:
         a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
         b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
         vector=a-b
-        dist=vector_size(vector)
+        dist=np.linalg.norm(vector)
         BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
         BROW=-12000*BROW/dist**7
         return BROW
@@ -241,8 +241,8 @@ class bmatrix:
         diffav=a-v
         diffbv=b-v
 
-        d1=vector_size(diffav)
-        d2=vector_size(diffbv)
+        d1=np.linalg.norm(diffav)
+        d2=np.linalg.norm(diffbv)
         cosalpha=(sum(diffav*diffbv)/(d1*d2))
         alpha=acos(cosalpha)
 
@@ -298,9 +298,9 @@ class bmatrix:
         r12=a-b
         r23=b-c
         r34=c-d
-        dr12=vector_size(r12)
-        dr23=vector_size(r23)
-        dr34=vector_size(r34)
+        dr12=np.linalg.norm(r12)
+        dr23=np.linalg.norm(r23)
+        dr34=np.linalg.norm(r34)
         cospsi2=sum((r12)*(r23))/(dr12*dr23)
         sinpsi2=sin(acos(cospsi2))
         cospsi3=sum((r23)*(r34))/(dr23*dr34)
@@ -423,7 +423,7 @@ class bmatrix:
         """
 
         a=coord.what[0]
-        dist=vector_size(lattmat[a])
+        dist=np.linalg.norm(lattmat[a])
         dl=lattmat[a]/dist
         if a == 0:
             BROW[-9:-6] = dl
@@ -442,8 +442,8 @@ class bmatrix:
         b=coord.what[1]
         diffav=lattmat[a]
         diffbv=lattmat[b]
-        d1=vector_size(diffav)
-        d2=vector_size(diffbv)
+        d1=np.linalg.norm(diffav)
+        d2=np.linalg.norm(diffbv)
         cosalpha=(sum(diffav*diffbv)/(d1*d2))
         alpha=acos(cosalpha)
         sinalpha=sin(alpha)
@@ -557,8 +557,8 @@ class bmatrix:
 
         a=coord.what[0]
         b=coord.what[1]
-        dista=vector_size(lattmat[a])
-        distb=vector_size(lattmat[b])
+        dista=np.linalg.norm(lattmat[a])
+        distb=np.linalg.norm(lattmat[b])
         dla=lattmat[a]/(dista*distb)
         dlb=-lattmat[b]*(dista/distb**3)
         if a==0:BROW[-9:-6]=dla
@@ -655,14 +655,14 @@ class bmatrix:
 
     def calculate_le(self,a,b):
         vector=a-b
-        distance=vector_size(vector)
+        distance=np.linalg.norm(vector)
         return distance
 
     def calculate_an(self,a,v,b):
         diffav=a-v
         diffbv=b-v
-        d1=vector_size(diffav)
-        d2=vector_size(diffbv)
+        d1=np.linalg.norm(diffav)
+        d2=np.linalg.norm(diffbv)
         cosalpha=(sum(diffav*diffbv)/(d1*d2))
         alpha=acos(cosalpha)
         return alpha
@@ -671,16 +671,16 @@ class bmatrix:
         r12=a-b
         r23=b-c
         r34=c-d
-        dr12=vector_size(r12)
-        dr23=vector_size(r23)
-        dr34=vector_size(r34)
+        dr12=np.linalg.norm(r12)
+        dr23=np.linalg.norm(r23)
+        dr34=np.linalg.norm(r34)
         e12=r12/dr12   # unit vector r12
         e23=r23/dr23   # unit vector r23
         e34=r34/dr34   # unit vector r34
         e12xe23=np.cross(e12,e23)
         e23xe34=np.cross(e23,e34)
         #if e12xe23!=0 and e23xe34!=0:
-        fuck=sum(e12xe23*e23xe34)/(vector_size(e12xe23)*vector_size(e23xe34))
+        fuck=sum(e12xe23*e23xe34)/(np.linalg.norm(e12xe23)*np.linalg.norm(e23xe34))
         if fuck>1:
             fuck=1.0
         if fuck<-1:
@@ -804,7 +804,7 @@ class bmatrix:
                 a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
                 b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
                 vector=a-b
-                dist=vector_size(vector)
+                dist=np.linalg.norm(vector)
                 complexcoord+=((coord.coefs[i]**2)*dist)
                 BROW=BROW+(coord.coefs[i]**2)*dist*self.prepare_l(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
             if coord.tag[i]=='A':
@@ -813,8 +813,8 @@ class bmatrix:
                 b=cartesian[tcoord.what[2]]+np.dot(tcoord.where[2],lattmat)
                 diffav=a-v
                 diffbv=b-v
-                d1=vector_size(diffav)
-                d2=vector_size(diffbv)
+                d1=np.linalg.norm(diffav)
+                d2=np.linalg.norm(diffbv)
                 cosalpha=(sum(diffav*diffbv)/(d1*d2))
                 alpha=acos(cosalpha)
                 complexcoord+=((coord.coefs[i]**2)*alpha)
@@ -829,8 +829,8 @@ class bmatrix:
                 vector3=c-d
                 cross1=np.cross(vector1,vector2)
                 cross2=np.cross(vector2,vector3)
-                cross1_size=vector_size(cross1)
-                cross2_size=vector_size(cross2)
+                cross1_size=np.linalg.norm(cross1)
+                cross2_size=np.linalg.norm(cross2)
                 fuck=sum(cross1*cross2)/(cross1_size*cross2_size)
                 if fuck>1:
                     fuck=1.0
@@ -853,7 +853,7 @@ class bmatrix:
                     a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
                     b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
                     vector=a-b
-                    dist=vector_size(vector)
+                    dist=np.linalg.norm(vector)
                     dummyA=dist/coord.coefs[i]
                     if abs(dummyA-1.0)<1e-4:
                         dummyA=1.0001
