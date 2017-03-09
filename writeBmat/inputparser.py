@@ -5,14 +5,12 @@ import argparse
 import os
 import sys
 
+import numpy as np
+
 if sys.version_info.major == 3:
     import configparser as cp
 else:
     import ConfigParser as cp
-
-
-
-import numpy as np
 
 
 def get_input_args():
