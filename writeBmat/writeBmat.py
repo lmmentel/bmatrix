@@ -29,12 +29,15 @@ MYTINY = 1e-6
 #num_cores = multiprocessing.cpu_count()
 #print("numCores = " + str(num_cores))
 
+
 class OrderedCounter(Counter, OrderedDict):
     pass
+
 
 def write_matrix(matrix, fname):
     'Write a matrix to file'
     np.save(fname, matrix)
+
 
 def read_internals(fname):
     'Read internal coordinates from a file'
