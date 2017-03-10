@@ -108,7 +108,7 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
     if return_bmatrix:
 
         # now compute the Bmatrix (wrt. fractional coordinates!)
-        b = bmatrix.bmatrix(cartesian, primcoords, natoms, cell, relax)
+        b = bmatrix.Bmatrix(cartesian, primcoords, natoms, cell, relax)
         Bmat = b.Bmatrix
 
         if relax:
@@ -169,7 +169,7 @@ def main():
     print(time.time() - t0, "seconds wall time coord check")
 
     #c now compute the Bmatrix (wrt. fractional coordinates!)
-    b = bmatrix.bmatrix(cartesian[:-9], primcoords, inpt.numofatoms, lattmat, args.relax)
+    b = bmatrix.Bmatrix(cartesian[:-9], primcoords, inpt.numofatoms, lattmat, args.relax)
     Bmat = b.Bmatrix
     #b=bmatrix_cart.bmatrix(cartesian[:-9],primcoords,inpt.numofatoms,lattmat,args.RELAX)
     #Bmat_c=b.Bmatrix

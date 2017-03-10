@@ -4,7 +4,7 @@ import datastruct
 import numpy as np
 
 
-class bmatrix:
+class Bmatrix:
     """
     Jacobi matrix for x->q conversion
 
