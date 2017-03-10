@@ -13,75 +13,133 @@ from physconstants import physical_constants as pC
 class Intern:
     """
     Identification of primitive internal coordinates.
+
+    Args:
+        atomtypes (list of str) :
+            List of atom's symbols
+
+        radii (list) :
+            List of atomic radii per symbol (same order as atomtypes)
+
+        ascale (float) :
+            Scaling factor for the radii
+
+        bscale (float) :
+            Scaling factor for the inter fragment distance
+
+        anglecrit (int) :
+            Critical angle
+
+        torsioncrit (int) :
+            Critical torsion angle
+
+        fragcoord (int) :
+            Fragment coordinate
+
+        relax (bool) :
+            Relax
+
+        tors :
+
+        subs (int) :
+
+        natoms (int) :
+            Number of atoms
+
+        cell (array_like) :
+            3 x 3 matrix of lattice vectors in atomic units
+
+        fractional (array_like):
+            Array of fractional coordinates (natoms x 3)
+
+        cartesian (array_like) :
+            Array of cartesian coordinates (natoms x 3)
+
+        atomcounts (list of ints) :
+            List of counts of different atoms
+
     """
 
-    def __init__(self, WATOMS, atradii_, ASCALE, BSCALE, ANGLECRIT,
-                 TORSIONCRIT, FRAGCOORD, RELAX, TORS, SUBST, numofatoms,
-                 lattmat, directs, cartesian, types):
+    def __init__(self, atomtypes, radii, ascale, bscale, anglecrit,
+                 torsioncrit, fragcoord, relax, TORS, SUBST, natoms,
+                 cell, fractional, cartesian, atomcounts):
+
+        self.atomtypes = atomtypes
+        self.radii = radii
+        self.ascale = ascale
+        self.bscale = bscale
+        self.anglecrit = anglecrit
+        self.torsioncrit = torsioncrit
+        self.fragcoord = fragcoord
+        self.atoms = natoms
+        self.relax = relax
+        self.natoms = natoms
+        self.cell = cell
+        self.fractional = fractional
+        self.cartesian = cartesian
 
         verbose = False
         if verbose:
             print(' input args in <Intern> '.center(80, '='))
-            print('WATOMS      : ', WATOMS)
-            print('atradii_    : ', atradii_)
-            print('ASCALE      : ', ASCALE)
-            print('BSCALE      : ', BSCALE)
-            print('ANGLECRIT   : ', ANGLECRIT)
-            print('TORSIONCRIT : ', TORSIONCRIT)
-            print('FRAGCOORD   : ', FRAGCOORD)
-            print('RELAX       : ', RELAX)
+            print('atomtypes   : ', atomtypes)
+            print('radii       : ', radii)
+            print('ascale      : ', ascale)
+            print('bscale      : ', bscale)
+            print('anglecrit   : ', anglecrit)
+            print('torsioncrit : ', torsioncrit)
+            print('fragcoord   : ', fragcoord)
+            print('relax       : ', relax)
             print('TORS        : ', TORS)
             print('SUBST       : ', SUBST)
-            print('numofatoms  : ', numofatoms)
-            print('lattmat     : ')
-            print(lattmat)
-            print('directs     : ')
-            print(directs)
+            print('natoms      : ', natoms)
+            print('cell     : ')
+            print(cell)
+            print('fractional     : ')
+            print(fractional)
             print('cartesian   : ')
             print(cartesian)
-            print('types       : ', types)
+            print('atomcounts       : ', atomcounts)
 
-        ASCALE = ASCALE / pC['AU2A']
+        ascale = ascale / pC['AU2A']
 
         self.trust = 0.15  # criteria for acceptance of angle
 
-        katoms = np.array(types) / 1
-        if len(katoms) != len(atradii_):
+        katoms = np.array(atomcounts) / 1
+        if len(katoms) != len(radii):
             raise IOError
         for i in range(1, len(katoms)):
             katoms[i] = katoms[i] + katoms[i - 1]
 
         self.atomictags = []
-        for i in range(len(types)):
-            for j in range(types[i]):
-                self.atomictags.append(WATOMS[i])
+        for i in range(len(atomcounts)):
+            for j in range(atomcounts[i]):
+                self.atomictags.append(self.atomtypes[i])
 
-        # print atradii_
-        atradii = ASCALE * np.array(atradii_)
+        # print radii
+        atradii = ascale * np.array(radii)
         atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
 
-        self.criteria = self.set_criteria(atrad, lattmat)
+        self.criteria = self.set_criteria(atrad)
         self.pexcluded = [None, None, None]
         self.mexcluded = [None, None, None]
         intrawhat = []
         intrawhere = []
 
         # intracellparameters
-        for i in range(len(directs)):
+        for i in range(len(self.fractional)):
             intrawhat.append(i)
             intrawhere.append(np.array([0, 0, 0]))
 
         # intercell parameters
-        interdirects, interwhat, interwhere = self.inter_search(directs,
-                                                                self.criteria)  # TODO: self.criteria shouldn't be passed as argument
+        interfractional, interwhat, interwhere = self.inter_search(self.criteria)  # TODO: self.criteria shouldn't be passed as argument
 
-        if len(interdirects) > 0:
-            alldirects = np.zeros((len(directs) + len(interdirects), 3),
+        if len(interfractional) > 0:
+            allfractional = np.zeros((len(self.fractional) + len(interfractional), 3),
                                   dtype=float)
-            alldirects[:len(directs)] = directs
-            alldirects[len(directs):] = interdirects
+            allfractional[:len(self.fractional)] = self.fractional
+            allfractional[len(self.fractional):] = interfractional
         else:
-            alldirects = directs
+            allfractional = self.fractional
         #allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
         #allwhat[:len(intrawhat)]=intrawhat
         #allwhat[len(intrawhat):]=interwhat
@@ -90,31 +148,27 @@ class Intern:
         #allwhere[:len(intrawhere)]=intrawhere
         #allwhere[len(intrawhere):]=interwhere
         allwhere = intrawhere + interwhere
-        allcartesian = self.dirto_cart(alldirects, lattmat)  # modified cell converted to cart coords.
+        allcartesian = self.dirto_cart(allfractional)  # modified cell converted to cart coords.
 
         shortradii = 0.2 * np.array(atradii)    # minimal lengths
         longradii = np.array(atradii)           # upper limit for bond length
 
-        bonds = self.bond_lengths(cartesian, intrawhat, intrawhere,
+        bonds = self.bond_lengths(intrawhat, intrawhere,
                                   allcartesian, allwhat, allwhere, shortradii,
                                   longradii, katoms, 'R')
 
-        fragments, substrate = self.frac_struct(bonds, numofatoms, SUBST)
+        fragments, substrate = self.frac_struct(bonds, SUBST)
 
         if len(bonds) == 0:
             print('no bonds detected, are you sure about the at. rad.?')
 
-        angles, iangwhat, iangwhere = self.set_angles(bonds, directs, lattmat,
-                                                      numofatoms, 'A',
-                                                      ANGLECRIT)
+        angles, iangwhat, iangwhere = self.set_angles(bonds, 'A')
 
         self.internalcoords = []
         self.longinternalcoords = []
 
         if TORS == 1:
-            torsions = self.set_dihedrals(iangwhat, iangwhere, directs,
-                                          lattmat, numofatoms, 'T',
-                                          TORSIONCRIT)
+            torsions = self.set_dihedrals(iangwhat, iangwhere, 'T')
             self.internalcoords = bonds + angles + torsions
         else:
             self.internalcoords = bonds + angles
@@ -130,55 +184,58 @@ class Intern:
                 if len(fragments[i]) > maxfr:
                     largestfrag = i
 
-        if (len(fragments) > 1 or len(substrate) > 0) and FRAGCOORD == 0:
+        if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord == 0:
             singles = []
             swhere = [0, 0, 0]
-            for i in range(len(cartesian)):
+            for i in range(len(self.cartesian)):
                 singles.append(datastruct.Complextype('simple', [1], 'X', [i],
                                                       [self.atomictags[i]],
                                                       [swhere],
-                                                      cartesian[i][0], 'free'))
+                                                      self.cartesian[i][0],
+                                                      'free'))
                 singles.append(datastruct.Complextype('simple', [1], 'Y', [i],
                                                       [self.atomictags[i]],
                                                       [swhere],
-                                                      cartesian[i][1], 'free'))
+                                                      self.cartesian[i][1],
+                                                      'free'))
                 singles.append(datastruct.Complextype('simple', [1], 'Z', [i],
                                                       [self.atomictags[i]],
                                                       [swhere],
-                                                      cartesian[i][2], 'free'))
-            if RELAX == 1:
+                                                      self.cartesian[i][2],
+                                                      'free'))
+            if self.relax:
                 for i in range(3):
                     singles.append(datastruct.Complextype('simple', [1], 'hX',
                                                           [i], [None],
                                                           [[0, 0, 0]],
-                                                          lattmat[i][0],
+                                                          self.cell[i][0],
                                                           'free'))
                     singles.append(datastruct.Complextype('simple', [1], 'hY',
                                                           [i], [None],
                                                           [[0, 0, 0]],
-                                                          lattmat[i][1],
+                                                          self.cell[i][1],
                                                           'free'))
                     singles.append(datastruct.Complextype('simple', [1], 'hZ',
                                                           [i], [None],
                                                           [[0, 0, 0]],
-                                                          lattmat[i][2],
+                                                          self.cell[i][2],
                                                           'free'))
             self.internalcoords += singles
 
-        if (len(fragments) > 1 or len(substrate) > 0) and FRAGCOORD != 0:
-            longradii = BSCALE * atradii
+        if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord != 0:
+            longradii = bscale * atradii
             for i in range(len(longradii)):
-                if WATOMS[i] == 'H':
+                if self.atomtypes[i] == 'H':
                     longradii[i] *= 2.0
 
-            longbonds = self.bond_fragments(fragments, substrate, directs,
-                                            lattmat, longradii, katoms, 'R')
+            longbonds = self.bond_fragments(fragments, substrate, longradii,
+                                            katoms, 'R')
 
-            if FRAGCOORD == 2:
+            if self.fragcoord == 2:
                 for j in range(len(longbonds)):
                     longbonds[j].value = 5 / longbonds[j].value
                     longbonds[j].tag = 'IR1'
-                if FRAGCOORD == 3:
+                if self.fragcoord == 3:
                     for j in range(len(longbonds)):
                         longbonds[j].value = 2000 / longbonds[j].value**6
                         longbonds[j].tag = 'IR6'
@@ -187,24 +244,24 @@ class Intern:
                 self.internalcoords += [longbonds[i]]
                 self.longinternalcoords += [longbonds[i]]
 
-    def set_criteria(self, atrad, lattmat):
+    def set_criteria(self, atrad):
         """
         Projection of the bond-radius to the lattice vectors.
         """
 
         criteria = [None, None, None]
-        #creates cutoff criterion"
-        norm1 = np.cross(lattmat[1], lattmat[2])  # normal vector to the 23 plane
-        norm2 = np.cross(lattmat[2], lattmat[0])  # normal vector to the 31 plane
-        norm3 = np.cross(lattmat[0], lattmat[1])  # normal vector to the 12 plane
+        #creates cutoff criterion
+        norm1 = np.cross(self.cell[1], self.cell[2])  # normal vector to the 23 plane
+        norm2 = np.cross(self.cell[2], self.cell[0])  # normal vector to the 31 plane
+        norm3 = np.cross(self.cell[0], self.cell[1])  # normal vector to the 12 plane
 
         norm1 = norm1 / np.linalg.norm(norm1)  # normalized norm1
         norm2 = norm2 / np.linalg.norm(norm2)  # normalized norm2
         norm3 = norm3 / np.linalg.norm(norm3)  # normalized norm3
 
-        cang10 = sum(norm1 * lattmat[0])  # cos of angle between norm1 and lattmat[0]
-        cang21 = sum(norm2 * lattmat[1])  # cos of angle between norm2 and lattmat[1]
-        cang32 = sum(norm3 * lattmat[2])  # cos of angle between norm3 and lattmat[2]
+        cang10 = sum(norm1 * self.cell[0])  # cos of angle between norm1 and cell[0]
+        cang21 = sum(norm2 * self.cell[1])  # cos of angle between norm2 and cell[1]
+        cang32 = sum(norm3 * self.cell[2])  # cos of angle between norm3 and cell[2]
 
         criteria[0] = abs(2 * atrad / cang10)
         criteria[1] = abs(2 * atrad / cang21)
@@ -212,7 +269,7 @@ class Intern:
 
         return np.array(criteria)
 
-    def make_exclusions(self, directs, which, criteria):
+    def make_exclusions(self, which, criteria):
         """
         Excludes those data from row_d, which do not satisfy the
         criteria which = 0,1,2 i.e. a b c; .
@@ -222,18 +279,18 @@ class Intern:
         nexclusions = []
 
         # excluded for positive translation
-        for i in range(len(directs)):
-            if directs[i][which] > criteria[which]:
+        for i in range(len(self.fractional)):
+            if self.fractional[i][which] > criteria[which]:
                 pexclusions = pexclusions + [i]
 
         # excluded for negative translation
-        for i in range(len(directs)):
-            if directs[i][which] < 1 - criteria[which]:
+        for i in range(len(self.fractional)):
+            if self.fractional[i][which] < 1 - criteria[which]:
                 nexclusions = nexclusions + [i]
 
         return pexclusions, nexclusions
 
-    def multy_cell(self, directs, first, second, third, pexcluded, mexcluded):
+    def multy_cell(self, first, second, third, pexcluded, mexcluded):
         """
         Consideres atoms outside cell which can form intercell bonds.
 
@@ -241,7 +298,7 @@ class Intern:
         """
 
         exclusions = []
-        intdirects = []
+        intfractional = []
         intwhat = []
         intwhere = []
         j = 0
@@ -252,54 +309,53 @@ class Intern:
             elif i == -1:
                 exclusions = exclusions + mexcluded[j]
             j = j + 1
-        transform = len(directs) * [1]
+        transform = len(self.fractional) * [1]
 
         for i in exclusions:
             transform[i] = 0
 
-        for i in range(len(directs)):
+        for i in range(len(self.fractional)):
             if transform[i] == 1:
-                intdirects.append(directs[i] + np.array([first, second, third]))
+                intfractional.append(self.fractional[i] + np.array([first,
+                                                                    second,
+                                                                    third]))
                 intwhat.append(i)
                 intwhere.append(np.array([first, second, third]))
-        return intdirects, intwhat, intwhere
+        return intfractional, intwhat, intwhere
 
-    def dirto_cart(self, directs, lattmat):
+    def dirto_cart(self, fractional):
         """
-        Conversion from direct to cartesian coords.
+        Conversion from fractional to cartesian coords.
         """
 
-        carts = np.dot(directs, lattmat)
+        carts = np.dot(fractional, self.cell)
         return carts
 
-    def inter_search(self, directs, criteria):
+    def inter_search(self, criteria):
         '''
         group of those atoms which can not form intercell bonds
         '''
 
         pexcluded = [None, None, None]
         mexcluded = [None, None, None]
-        interdirects = []
+        interfractional = []
         interwhat = []
         interwhere = []
         for i in range(3):
-            pexcluded[i], mexcluded[i] = self.make_exclusions(directs, i,
-                                                              criteria)
+            pexcluded[i], mexcluded[i] = self.make_exclusions(i, criteria)
         for i in (-1, 0, 1):
             for j in (-1, 0, 1):
                 for k in (-1, 0, 1):
                     if (i**2 + j**2 + k**2) != 0:
-                        idirects, iwhat, iwhere = self.multy_cell(directs, i,
-                                                                  j, k,
-                                                                  pexcluded,
-                                                                  mexcluded)
-                        interdirects = interdirects + idirects
+                        ifractional, iwhat, iwhere = self.multy_cell(i, j, k,
+                                                                     pexcluded,
+                                                                     mexcluded)
+                        interfractional = interfractional + ifractional
                         interwhat = interwhat + iwhat
                         interwhere = interwhere + iwhere
-        return interdirects, interwhat, interwhere
+        return interfractional, interwhat, interwhere
 
-    def bond_fragments(self, fragments, substrate, directs, lattmat, radii_l,
-                       katoms, tag):
+    def bond_fragments(self, fragments, substrate, radii_l, katoms, tag):
         bonds = []
         ibonds = []
         ibondwhat = []
@@ -314,7 +370,7 @@ class Intern:
             while substrate[jj] >= katoms[target]:
                 target = target + 1
             radii1_l = radii_l[target]
-            a = directs[substrate[jj]]
+            a = self.fractional[substrate[jj]]
             for i in range(len(fragments)):
                 for ii in range(len(fragments[i])):
                     target = 0
@@ -322,7 +378,7 @@ class Intern:
                         target = target + 1
                     radii2_l = radii_l[target]
                     criteria_l = (radii1_l + radii2_l)
-                    b_ = directs[fragments[i][ii]]
+                    b_ = self.fractional[fragments[i][ii]]
                     for t1 in (-1, 0, 1):
                         b = np.zeros(3, dtype=float)
                         b[0] = b_[0] + t1
@@ -331,7 +387,7 @@ class Intern:
                             for t3 in (-1, 0, 1):
                                 b[2] = b_[2] + t3
                                 r = b - a
-                                r = np.dot(r, lattmat)
+                                r = np.dot(r, self.cell)
                                 r = sum(r * r)**0.5
                                 if r <= criteria_l:
                                     ibonds.append(r)
@@ -350,7 +406,7 @@ class Intern:
                         while fragments[i][ii] >= katoms[target]:
                             target = target + 1
                         radii1_l = radii_l[target]
-                        a = directs[fragments[i][ii]]
+                        a = self.fractional[fragments[i][ii]]
                         for jj in range(len(fragments[j])):
                             if fragments[j][jj] != fragments[i][ii]:
                                 target = 0
@@ -358,7 +414,7 @@ class Intern:
                                     target = target + 1
                                 radii2_l = radii_l[target]
                                 criteria_l = (radii1_l + radii2_l)
-                                b_ = directs[fragments[j][jj]]
+                                b_ = self.fractional[fragments[j][jj]]
                                 for t1 in (-1, 0, 1):
                                     b = np.zeros(3, dtype=float)
                                     b[0] = b_[0] + t1
@@ -367,7 +423,7 @@ class Intern:
                                         for t3 in (-1, 0, 1):
                                             b[2] = b_[2] + t3
                                             r = b - a
-                                            r = np.dot(r, lattmat)
+                                            r = np.dot(r, self.cell)
                                             r = sum(r * r)**0.5
                                             if r <= criteria_l:
                                                 ibonds.append(r)
@@ -395,7 +451,7 @@ class Intern:
 
         return bonds
 
-    def bond_lengths(self, cart, what, where, allcart, allwhat, allwhere,
+    def bond_lengths(self, what, where, allcart, allwhat, allwhere,
                      radii_s, radii_l, katoms, tag):
         """
         Finds and calculates bond lengths.
@@ -407,7 +463,7 @@ class Intern:
         ibondwhere = []
         for i in range(len(what)):
             for j in range(len(allcart)):
-                diffvec = cart[what[i]] - allcart[j]
+                diffvec = self.cartesian[what[i]] - allcart[j]
                 length = np.linalg.norm(diffvec)
                 target = 0
                 while what[i] >= katoms[target]:
@@ -442,16 +498,16 @@ class Intern:
                                                 ibonds[bindex], 'free'))
         return bonds
 
-    def set_angles(self, bonds, directs, lattmat, numofatoms, tag, ANGLECRIT):
+    def set_angles(self, bonds, tag):
         """
         Finds and calculates angles.
         """
 
-        iangwhat = numofatoms * [None]
-        iangwhere = numofatoms * [None]
+        iangwhat = self.natoms * [None]
+        iangwhere = self.natoms * [None]
         emerbonds = []
 
-        for i in range(numofatoms):
+        for i in range(self.natoms):
             iangwhat[i] = []
             iangwhere[i] = []
         angles = []
@@ -466,15 +522,15 @@ class Intern:
             iangwhere[ii].append(ll)
             iangwhere[jj].append(kk - ll)
 
-        for i in range(numofatoms):
+        for i in range(self.natoms):
             vectors = []
             # if len(self.topmap[i])>6:continue #######
-            if len(self.topmap[i]) > ANGLECRIT:
+            if len(self.topmap[i]) > self.anglecrit:
                 continue
             for j in range(len(iangwhat[i])):
                 windex = iangwhat[i][j]
-                vec = directs[i] - (directs[windex] + iangwhere[i][j])
-                vec = np.dot(vec, lattmat)
+                vec = self.fractional[i] - (self.fractional[windex] + iangwhere[i][j])
+                vec = np.dot(vec, self.cell)
                 value = np.linalg.norm(vec)
                 both = [vec, value]
                 vectors.append(both)
@@ -548,7 +604,7 @@ class Intern:
                                  self.atomictags[iangwhat[indx1][j]]]
                     awhere = [emerbonds[i].where[1] - emerbonds[i].where[0],
                               [0, 0, 0], iangwhere[indx1][j]]
-                angle = self.calc_angle(directs, awhat, awhere, lattmat)
+                angle = self.calc_angle(awhat, awhere)
                 if sin(angle) > self.trust:
                     angles.append(datastruct.Complextype('simple', [1], tag,
                                                          awhat, awhattags,
@@ -568,19 +624,19 @@ class Intern:
                                  self.atomictags[iangwhat[indx2][j]]]
                     awhere = [emerbonds[i].where[0] - emerbonds[i].where[1],
                               [0, 0, 0], iangwhere[indx2][j]]
-                angle = self.calc_angle(directs, awhat, awhere, lattmat)
+                angle = self.calc_angle(awhat, awhere)
                 if sin(angle) > self.trust:
                     angles.append(datastruct.Complextype('simple', [1], tag,
                                                          awhat, awhattags,
                                                          awhere, angle, 'free'))
         return angles, iangwhat, iangwhere
 
-    def calc_angle(self, directs, awhat, awhere, lattmat):
+    def calc_angle(self, awhat, awhere):
 
-        v1 = directs[awhat[1]] - (directs[awhat[0]] + awhere[0])
-        v1 = np.dot(v1, lattmat)
-        v2 = directs[awhat[1]] - (directs[awhat[2]] + awhere[2])
-        v2 = np.dot(v2, lattmat)
+        v1 = self.fractional[awhat[1]] - (self.fractional[awhat[0]] + awhere[0])
+        v1 = np.dot(v1, self.cell)
+        v2 = self.fractional[awhat[1]] - (self.fractional[awhat[2]] + awhere[2])
+        v2 = np.dot(v2, self.cell)
         angle = sum(v1 * v2) / (sum(v1**2) * sum(v2**2))**0.5
         if angle > 1:
             angle = 1.0
@@ -588,14 +644,13 @@ class Intern:
             angle = -1.0
         return acos(angle)
 
-    def set_dihedrals(self, iangwhat, iangwhere, directs, lattmat, numofatoms,
-                      tag, TORSIONCRIT):
+    def set_dihedrals(self, iangwhat, iangwhere, tag):
         """
         Finds and calculates dihedral angles.
         """
 
         torsions = []
-        for i in range(numofatoms):
+        for i in range(self.natoms):
             if len(iangwhat[i]) > 1:
                 secondwhat = i
                 # if len(self.topmap[secondwhat])>4:continue
@@ -603,8 +658,8 @@ class Intern:
                 for j in range(len(iangwhat[i])):
                     firstwhat = iangwhat[i][j]
                     # if (len(self.topmap[secondwhat])>4 and len(self.topmap[firstwhat])>4):continue
-                    if (len(self.topmap[secondwhat]) > TORSIONCRIT and
-                            len(self.topmap[firstwhat]) > TORSIONCRIT):
+                    if (len(self.topmap[secondwhat]) > self.torsioncrit and
+                            len(self.topmap[firstwhat]) > self.torsioncrit):
                         continue
                     if firstwhat == secondwhat:
                         continue
@@ -630,8 +685,7 @@ class Intern:
                                                              fourthwhat,
                                                              firstwhere,
                                                              thirdwhere,
-                                                             fourthwhere,
-                                                             directs, lattmat)
+                                                             fourthwhere)
                                 if itorsion is not None:
                                     torwhat = [firstwhat, secondwhat,
                                                thirdwhat, fourthwhat]
@@ -648,7 +702,7 @@ class Intern:
         return torsions
 
     def calculate_da(self, firstwhat, secondwhat, thirdwhat, fourthwhat,
-                     firstwhere, thirdwhere, fourthwhere, directs, lattmat):
+                     firstwhere, thirdwhere, fourthwhere):
         """
         Calculates dihedral angles.
         """
@@ -658,10 +712,10 @@ class Intern:
                 secondwhat == fourthwhat or thirdwhat == fourthwhat:
             return None      # this is provisorium, will be fixed soon!!!
 
-        a = directs[firstwhat] + firstwhere
-        b = directs[secondwhat]
-        c = directs[thirdwhat] + thirdwhere
-        d = directs[fourthwhat] + fourthwhere
+        a = self.fractional[firstwhat] + firstwhere
+        b = self.fractional[secondwhat]
+        c = self.fractional[thirdwhat] + thirdwhere
+        d = self.fractional[fourthwhat] + fourthwhere
         checkpoint = np.linalg.norm(a - d)
 
         if checkpoint != 0:
@@ -669,9 +723,9 @@ class Intern:
             vector2 = b - c
             vector3 = c - d
 
-            vector1 = np.dot(vector1, lattmat)
-            vector2 = np.dot(vector2, lattmat)
-            vector3 = np.dot(vector3, lattmat)
+            vector1 = np.dot(vector1, self.cell)
+            vector2 = np.dot(vector2, self.cell)
+            vector3 = np.dot(vector3, self.cell)
 
             vector1size = np.linalg.norm(vector1)
             vector2size = np.linalg.norm(vector2)
@@ -713,7 +767,7 @@ class Intern:
                     return dangle
             return None
 
-    def frac_struct(self, bonds, numofatoms, SUBST):
+    def frac_struct(self, bonds, SUBST):
         """
         This function finds how many structural
         fragments are there. Returns array 'molecules'
@@ -721,13 +775,13 @@ class Intern:
         the largest one are listed.
         """
 
-        # self.topology=np.zeros((numofatoms,numofatoms),dtype=float)
+        # self.topology=np.zeros((natoms,natoms),dtype=float)
 
-        self.topology = np.zeros((numofatoms, numofatoms))
-        self.topology_matrix = np.zeros((numofatoms, numofatoms))
+        self.topology = np.zeros((self.natoms, self.natoms))
+        self.topology_matrix = np.zeros((self.natoms, self.natoms))
 
-        fract = numofatoms * [None]
-        self.topmap = numofatoms * [None]
+        fract = self.natoms * [None]
+        self.topmap = self.natoms * [None]
         for i in range(len(fract)):
             fract[i] = [i]
             self.topmap[i] = []
@@ -747,13 +801,13 @@ class Intern:
             self.topmap[index2].append(index1)
         self.topology_matrix_adds = 1 * self.topology_matrix
 
-        for i in range(numofatoms):
+        for i in range(self.natoms):
             self.topology[i, i] = 2
             dummy = 0
-            for j in range(numofatoms):
+            for j in range(self.natoms):
                 if self.topology[i, j] == 1:
                     dummy = 1
-                    for k in range(numofatoms):
+                    for k in range(self.natoms):
                         if self.topology[i, k] == 1 and self.topology[j, k] == 0:
                             self.topology[j, k] = 1
                         if self.topology[i, k] == 2:
@@ -778,7 +832,7 @@ class Intern:
                 for ii in range(len(fract)):
                     if fract[ii][0] is not None:
                         i = fract[ii][0]
-                        for j in range(numofatoms):
+                        for j in range(self.natoms):
                             if j > i:
                                 if self.topology_matrix_adds[i, j] == 1:
                                     fract[ii].append(j)
@@ -818,14 +872,14 @@ class Intern:
 
         return fractions
 
-    def make_singles(self, molecules, cartesian):
+    def make_singles(self, molecules):
         """
         Createsian xyz coordinates for given atoms
         """
 
         singles = 3 * len(molecules) * [None]
         for i in range(len(molecules)):
-            cartusa = cartesian[molecules[i]]
+            cartusa = self.cartesian[molecules[i]]
             for j in range(3):
                 indx = 3 * i + j
                 singles[indx] = cartusa[j]
