@@ -94,7 +94,7 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
     if os.path.exists('internals.pkl'):
         primcoords = read_internals('internals.pkl')
 
-        deal = dealxyz.Dealxyz(cartesian.ravel(), primcoords, cell)
+        deal = dealxyz.Dealxyz(cartesian, primcoords, cell)
         for i in range(len(primcoords)):
             primcoords[i].value = deal.internals[i]
         print('Internal coordinates were read from the file: internals.pkl')
@@ -112,10 +112,8 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
 
     if return_bmatrix:
 
-        cart_flat = np.hstack((cartesian.ravel(), cell.ravel()))
-
         # now compute the Bmatrix (wrt. fractional coordinates!)
-        b = bmatrix.bmatrix(cart_flat[:-9], primcoords, natoms, cell, relax)
+        b = bmatrix.bmatrix(cartesian, primcoords, natoms, cell, relax)
         Bmat = b.Bmatrix
 
         if relax:

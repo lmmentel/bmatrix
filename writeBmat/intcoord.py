@@ -47,13 +47,13 @@ class Intern:
             Number of atoms
 
         cell (array_like) :
-            3 x 3 matrix of lattice vectors in atomic units
+            Lattice vectors in atomic units (3 x 3)
 
         fractional (array_like):
-            Array of fractional coordinates (natoms x 3)
+            Fractional coordinates (natoms x 3)
 
         cartesian (array_like) :
-            Array of cartesian coordinates (natoms x 3)
+            Cartesian coordinates (natoms x 3)
 
         atomcounts (list of ints) :
             List of counts of different atoms
@@ -77,6 +77,7 @@ class Intern:
         self.cell = cell
         self.fractional = fractional
         self.cartesian = cartesian
+        self.trust = 0.15  # criteria for acceptance of angle
 
         verbose = False
         if verbose:
@@ -102,8 +103,6 @@ class Intern:
 
         ascale = ascale / pC['AU2A']
 
-        self.trust = 0.15  # criteria for acceptance of angle
-
         katoms = np.array(atomcounts) / 1
         if len(katoms) != len(radii):
             raise IOError
@@ -119,7 +118,7 @@ class Intern:
         atradii = ascale * np.array(radii)
         atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
 
-        self.criteria = self.set_criteria(atrad)
+        self.set_criteria(atrad)
         self.pexcluded = [None, None, None]
         self.mexcluded = [None, None, None]
         intrawhat = []
@@ -131,11 +130,11 @@ class Intern:
             intrawhere.append(np.array([0, 0, 0]))
 
         # intercell parameters
-        interfractional, interwhat, interwhere = self.inter_search(self.criteria)  # TODO: self.criteria shouldn't be passed as argument
+        interfractional, interwhat, interwhere = self.inter_search()
 
         if len(interfractional) > 0:
-            allfractional = np.zeros((len(self.fractional) + len(interfractional), 3),
-                                  dtype=float)
+            allfractional = np.zeros((len(self.fractional) +
+                                      len(interfractional), 3), dtype=float)
             allfractional[:len(self.fractional)] = self.fractional
             allfractional[len(self.fractional):] = interfractional
         else:
@@ -250,7 +249,7 @@ class Intern:
         """
 
         criteria = [None, None, None]
-        #creates cutoff criterion
+        # creates cutoff criterion
         norm1 = np.cross(self.cell[1], self.cell[2])  # normal vector to the 23 plane
         norm2 = np.cross(self.cell[2], self.cell[0])  # normal vector to the 31 plane
         norm3 = np.cross(self.cell[0], self.cell[1])  # normal vector to the 12 plane
@@ -267,9 +266,9 @@ class Intern:
         criteria[1] = abs(2 * atrad / cang21)
         criteria[2] = abs(2 * atrad / cang32)
 
-        return np.array(criteria)
+        self.criteria = np.array(criteria)
 
-    def make_exclusions(self, which, criteria):
+    def make_exclusions(self, which):
         """
         Excludes those data from row_d, which do not satisfy the
         criteria which = 0,1,2 i.e. a b c; .
@@ -280,12 +279,12 @@ class Intern:
 
         # excluded for positive translation
         for i in range(len(self.fractional)):
-            if self.fractional[i][which] > criteria[which]:
+            if self.fractional[i][which] > self.criteria[which]:
                 pexclusions = pexclusions + [i]
 
         # excluded for negative translation
         for i in range(len(self.fractional)):
-            if self.fractional[i][which] < 1 - criteria[which]:
+            if self.fractional[i][which] < 1 - self.criteria[which]:
                 nexclusions = nexclusions + [i]
 
         return pexclusions, nexclusions
@@ -331,7 +330,7 @@ class Intern:
         carts = np.dot(fractional, self.cell)
         return carts
 
-    def inter_search(self, criteria):
+    def inter_search(self):
         '''
         group of those atoms which can not form intercell bonds
         '''
@@ -341,8 +340,10 @@ class Intern:
         interfractional = []
         interwhat = []
         interwhere = []
+
         for i in range(3):
-            pexcluded[i], mexcluded[i] = self.make_exclusions(i, criteria)
+            pexcluded[i], mexcluded[i] = self.make_exclusions(i)
+
         for i in (-1, 0, 1):
             for j in (-1, 0, 1):
                 for k in (-1, 0, 1):
@@ -356,6 +357,7 @@ class Intern:
         return interfractional, interwhat, interwhere
 
     def bond_fragments(self, fragments, substrate, radii_l, katoms, tag):
+
         bonds = []
         ibonds = []
         ibondwhat = []
@@ -461,6 +463,7 @@ class Intern:
         ibondwhat = []
         ibondwhattags = []
         ibondwhere = []
+
         for i in range(len(what)):
             for j in range(len(allcart)):
                 diffvec = self.cartesian[what[i]] - allcart[j]
