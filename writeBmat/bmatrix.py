@@ -11,26 +11,30 @@ class bmatrix:
     Args:
         cartesian (array_like) :
             Cartesian coordinates (N x 3)
+
         coords () :
             Internal coordinates
+
         cell (array_like) :
             Lattice vectors in atomic units (3 x 3)
 
+        natoms (int) :
+            Number of atoms
     """
 
-    def __init__(self, cartesian, coords, numofatoms, cell, relax):
+    def __init__(self, cartesian, coords, natoms, cell, relax):
 
         self.cartesian = cartesian
         self.cell = cell
-
-        invlat = np.linalg.inv(cell)
+        self.invcell = np.linalg.inv(cell)
+        self.natoms = natoms
 
         dimdim1 = len(coords)
 
         if relax:
-            dimdim2 = numofatoms * 3 + 9
+            dimdim2 = self.natoms * 3 + 9
         else:
-            dimdim2 = numofatoms * 3
+            dimdim2 = self.natoms * 3
 
         self.Bmatrix = np.zeros((dimdim1, dimdim2), dtype=float)
 
@@ -43,39 +47,39 @@ class bmatrix:
             BROW = np.zeros((dimdim2), dtype=float)
             if coords[i].dtyp == 'simple':
                 if coords[i].tag == 'X':
-                    self.Bmatrix[i] = self.prepare_sing(coords[i],0,invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_sing(coords[i], 0, BROW)
                 elif coords[i].tag == 'Y':
-                    self.Bmatrix[i] = self.prepare_sing(coords[i],1,invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_sing(coords[i], 1, BROW)
                 elif coords[i].tag == 'Z':
-                    self.Bmatrix[i] = self.prepare_sing(coords[i],2,invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_sing(coords[i], 2, BROW)
                 elif coords[i].tag == 'fX':
-                    self.Bmatrix[i] = self.prepare_fsing(coords[i],0,BROW)
+                    self.Bmatrix[i] = self.prepare_fsing(coords[i], 0, BROW)
                 elif coords[i].tag == 'fY':
-                    self.Bmatrix[i] = self.prepare_fsing(coords[i],1,BROW)
+                    self.Bmatrix[i] = self.prepare_fsing(coords[i], 1, BROW)
                 elif coords[i].tag == 'fZ':
-                    self.Bmatrix[i] = self.prepare_fsing(coords[i],2,BROW)
+                    self.Bmatrix[i] = self.prepare_fsing(coords[i], 2, BROW)
                 elif coords[i].tag == 'hX':
-                    self.Bmatrix[i] = self.prepare_latsing(coords[i],0,BROW)
+                    self.Bmatrix[i] = self.prepare_latsing(coords[i], 0, BROW)
                 elif coords[i].tag == 'hY':
-                    self.Bmatrix[i] = self.prepare_latsing(coords[i],1,BROW)
+                    self.Bmatrix[i] = self.prepare_latsing(coords[i], 1, BROW)
                 elif coords[i].tag == 'hZ':
-                    self.Bmatrix[i] = self.prepare_latsing(coords[i],2,BROW)
+                    self.Bmatrix[i] = self.prepare_latsing(coords[i], 2, BROW)
                 elif coords[i].tag == 'R':
-                    self.Bmatrix[i] = self.prepare_l(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_l(coords[i], BROW)
                 elif coords[i].tag == 'M':
-                    self.Bmatrix[i] = self.prepare_m(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_m(coords[i], BROW)
                 elif coords[i].tag == 'RatioR':
-                    self.Bmatrix[i] = self.prepare_ratior(coords[i],cell,invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_ratior(coords[i], BROW)
                 elif coords[i].tag == 'A':
-                    self.Bmatrix[i] = self.prepare_a(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_a(coords[i], BROW)
                 elif coords[i].tag == 'T':
-                    self.Bmatrix[i] = self.prepare_dh(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_dh(coords[i], BROW)
                 elif coords[i].tag == 'tV':
-                    self.Bmatrix[i] = self.prepare_tv(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_tv(coords[i], BROW)
                 elif coords[i].tag == 'IR1':
-                    self.Bmatrix[i] = self.prepare_ir1(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_ir1(coords[i], BROW)
                 elif coords[i].tag == 'IR6':
-                    self.Bmatrix[i] = self.prepare_ir6(coords[i],invlat,BROW)
+                    self.Bmatrix[i] = self.prepare_ir6(coords[i], BROW)
 
                 if relax:
                     if coords[i].tag == 'LR':
@@ -84,20 +88,20 @@ class bmatrix:
                         self.Bmatrix[i] = self.prepare_la(coords[i], BROW)
                     elif coords[i].tag == 'LB':
                         self.Bmatrix[i] = self.prepare_lb(coords[i], BROW)
-        #elif inttags[i]=='LS':
+        # elif inttags[i]=='LS':
                     elif coords[i].tag == 'LV':
                         self.Bmatrix[i] = self.prepare_lv(BROW)
                     elif coords[i].tag == 'RatioLR':
                         self.Bmatrix[i] = self.prepare_ratiolr(coords[i], BROW)
 
             if coords[i].dtyp == 'sum':
-                self.Bmatrix[i] = self.prepare_sum(coords[i], invlat, BROW)
+                self.Bmatrix[i] = self.prepare_sum(coords[i], BROW)
             if coords[i].dtyp == 'norm':
-                self.Bmatrix[i] = self.prepare_norm(coords[i], invlat, BROW)
+                self.Bmatrix[i] = self.prepare_norm(coords[i], BROW)
             if coords[i].dtyp == 'cn':
-                self.Bmatrix[i] = self.prepare_cnum(coords[i], invlat, BROW)
+                self.Bmatrix[i] = self.prepare_cnum(coords[i], BROW)
 
-    def prepare_l(self, coord, invlat, BROW):
+    def prepare_l(self, coord, BROW):
         """
         Calculates length components of the B matrix.
         """
@@ -123,7 +127,7 @@ class bmatrix:
             cmat = np.zeros((2, 3), dtype=float)
             cmat[0] = a
             cmat[1] = b
-            dmat = np.dot(cmat, invlat)   # -0.5
+            dmat = np.dot(cmat, self.invcell)   # -0.5
             for i in range(3):
                 if dmat[0][i] > 1 or dmat[0][i] < 0.0:
                     dmat[:, i] -= dmat[0][i] - dmat[0][i] % 1
@@ -137,7 +141,7 @@ class bmatrix:
             BROW[-3:] = latderiv[2]
         return BROW
 
-    def prepare_m(self, coord, invlat, BROW):
+    def prepare_m(self, coord, BROW):
         """
         Calculates length components of the B matrix.
         """
@@ -171,7 +175,7 @@ class bmatrix:
             cmat[0] = a
             cmat[1] = b
             cmat[2] = c
-            dmat = np.dot(cmat, invlat)  #-0.5
+            dmat = np.dot(cmat, self.invcell)  # -0.5
             for i in range(3):
                 if dmat[1][i] > 1 or dmat[1][i] < 0.0:
                     dmat[:, i] -= dmat[1][i] - dmat[1][i] % 1
@@ -188,7 +192,7 @@ class bmatrix:
 
         return BROW
 
-    def prepare_ratior(self, coord, invlat, BROW):
+    def prepare_ratior(self, coord, BROW):
         """
         Ratio between two bond lengths
         """
@@ -206,17 +210,17 @@ class bmatrix:
         coord_ = coord
         coord_.what = tmp1[:2]
         coord_.where = tmp2[:2]
-        dr1 = self.prepare_l(coord_, invlat, np.zeros(len(BROW), dtype=float))
+        dr1 = self.prepare_l(coord_, np.zeros(len(BROW), dtype=float))
         coord_.what = tmp1[2:]
         coord_.where = tmp2[2:]
-        dr2 = self.prepare_l(coord_, invlat, np.zeros(len(BROW), dtype=float))
+        dr2 = self.prepare_l(coord_, np.zeros(len(BROW), dtype=float))
         coord.what = tmp1
         coord.where = tmp2
         BROW = dr1 / dist2 - (dist1 / dist2**2) * dr2
 
         return BROW
 
-    def prepare_ir1(self, coord, invlat, BROW):
+    def prepare_ir1(self, coord, BROW):
         """
         Inverse power coordinate
         """
@@ -225,11 +229,11 @@ class bmatrix:
         b = self.cartesian[coord.what[1]] + np.dot(coord.where[1], self.cell)
         vector = a - b
         dist = np.linalg.norm(vector)
-        BROW = self.prepare_l(coord, invlat, BROW)
+        BROW = self.prepare_l(coord, BROW)
         BROW = -5 * BROW / dist**2
         return BROW
 
-    def prepare_ir6(self, coord, invlat, BROW):
+    def prepare_ir6(self, coord, BROW):
         """
         Another inverse power coordinate
         """
@@ -238,11 +242,11 @@ class bmatrix:
         b = self.cartesian[coord.what[1]] + np.dot(coord.where[1], self.cell)
         vector = a - b
         dist = np.linalg.norm(vector)
-        BROW = self.prepare_l(coord, invlat, BROW)
+        BROW = self.prepare_l(coord, BROW)
         BROW = -12000 * BROW / dist**7
         return BROW
 
-    def prepare_a(self, coord, invlat, BROW):
+    def prepare_a(self, coord, BROW):
         """
         Calculates angular components of the B matrix.
         """
@@ -284,7 +288,7 @@ class bmatrix:
             cmat[1] = v
             cmat[2] = b
 
-            dmat = np.dot(cmat, invlat)  # -0.5
+            dmat = np.dot(cmat, self.invcell)  # -0.5
             for i in range(3):
                 if dmat[1][i] > 1 or dmat[1][i] < 0.0:
                     dmat[:, i] -= dmat[1][i] - dmat[1][i] % 1
@@ -300,7 +304,7 @@ class bmatrix:
             BROW[-3:] = latderiv[2]
         return BROW
 
-    def prepare_dh(self, coord, invlat, BROW):
+    def prepare_dh(self, coord, BROW):
         """
         Calculates dihedral components of the B matrix.
         """
@@ -353,7 +357,7 @@ class bmatrix:
             cmat[1] = b
             cmat[2] = c
             cmat[3] = d
-            dmat = np.dot(cmat, invlat)  # -0.5
+            dmat = np.dot(cmat, self.invcell)  # -0.5
             for i in range(3):
                 if dmat[1][i] > 1 or dmat[1][i] < 0.0:
                     dmat[:, i] -= dmat[1][i] - dmat[1][i] % 1
@@ -371,7 +375,7 @@ class bmatrix:
             BROW[-3:] = latderiv[2]
         return BROW
 
-    def prepare_tv(self, coord, invlat, BROW):
+    def prepare_tv(self, coord, BROW):
         """
         Calculates volume of tetrahedron components of the B matrix.
         """
@@ -413,7 +417,7 @@ class bmatrix:
             cmat[1] = b
             cmat[2] = c
             cmat[3] = d
-            dmat = np.dot(cmat, invlat)  # -0.5
+            dmat = np.dot(cmat, self.invcell)  # -0.5
             for i in range(3):
                 if dmat[1][i] > 1 or dmat[1][i] < 0.0:
                     dmat[:, i] -= dmat[1][i] - dmat[1][i] % 1
@@ -512,25 +516,33 @@ class bmatrix:
         b2 /= (naxb * naxc)
         b3 /= (naxb * naxc)
 
-        daxb_da=np.transpose(np.array([[0.,-b[2],b[1]],[b[2],0.,-b[0]],[-b[1],b[0],0.]]))
-        daxb_da=np.dot(axb,daxb_da)/naxb
-        c1=daxb_da*naxc*sum(axb*axc)/(naxb*naxc)**2
+        daxb_da = np.transpose(np.array([[0.0, -b[2], b[1]],
+                                         [b[2], 0.0, -b[0]],
+                                         [-b[1], b[0], 0.0]]))
+        daxb_da = np.dot(axb, daxb_da) / naxb
+        c1 = daxb_da * naxc * sum(axb * axc) / (naxb * naxc)**2
 
-        daxb_db=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
-        daxb_db=np.dot(axb,daxb_db)/naxb
-        c2=daxb_db*naxc*sum(axb*axc)/(naxb*naxc)**2
+        daxb_db = np.transpose(np.array([[0.0, a[2], -a[1]],
+                                         [-a[2], 0.0, a[0]],
+                                         [a[1], -a[0], 0.0]]))
+        daxb_db = np.dot(axb, daxb_db) / naxb
+        c2 = daxb_db * naxc * sum(axb * axc) / (naxb * naxc)**2
 
-        c3=np.zeros(3,dtype=float)
+        c3 = np.zeros(3, dtype=float)
 
-        daxc_da=np.transpose(np.array([[0.,-c[2],c[1]],[c[2],0.,-c[0]],[-c[1],c[0],0.]]))
-        daxc_da=np.dot(axc,daxc_da)/naxc
-        d1=daxc_da*naxb*sum(axb*axc)/(naxb*naxc)**2
+        daxc_da = np.transpose(np.array([[0.0, -c[2], c[1]],
+                                         [c[2], 0.0, -c[0]],
+                                         [-c[1], c[0], 0.0]]))
+        daxc_da = np.dot(axc, daxc_da) / naxc
+        d1 = daxc_da * naxb * sum(axb * axc) / (naxb * naxc)**2
 
-        d2=np.zeros(3,dtype=float)
+        d2 = np.zeros(3, dtype=float)
 
-        daxc_dc=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
-        daxc_dc=np.dot(axc,daxc_dc)/naxc
-        d3=daxc_dc*naxb*sum(axb*axc)/(naxb*naxc)**2
+        daxc_dc = np.transpose(np.array([[0.0, a[2], -a[1]],
+                                         [-a[2], 0.0, a[0]],
+                                         [a[1], -a[0], 0.0]]))
+        daxc_dc = np.dot(axc, daxc_dc) / naxc
+        d3 = daxc_dc * naxb * sum(axb * axc) / (naxb * naxc)**2
 
         ind1 = -9
         ind2 = -6
@@ -596,7 +608,8 @@ class bmatrix:
 
         for i in range(lengths):
             a = self.cartesian[intwhat[i][0]]
-            b = self.cartesian[intwhat[i][1]] + np.dot(intwhere[i][1], self.cell)
+            b = self.cartesian[intwhat[i][1]] + np.dot(intwhere[i][1],
+                                                       self.cell)
             distnul = self.calculate_le(a, b)
             for j in range(3):
                 dershift = np.array([0.0, 0.0, 0.0])
@@ -711,7 +724,7 @@ class bmatrix:
             dangle = -dangle
         return dangle
 
-    def prepare_sing(self, coord, xyz, invlat, BROW):
+    def prepare_sing(self, coord, xyz, BROW):
         """
         Adds elements corresponding to pure cartesian coordinates.
         """
@@ -725,7 +738,7 @@ class bmatrix:
         if len(BROW) == 3 * len(self.cartesian) + 9:
             cmat = np.zeros((1, 3), dtype=float)
             cmat[0][xyz] = a
-            dmat = np.dot(cmat, invlat)  # -0.5
+            dmat = np.dot(cmat, self.invcell)  # -0.5
             # dmat=self.put_intocell(dmat)-0.5
             deriv = np.zeros((1, 3), dtype=float)
             deriv[0][xyz] = 1.0
@@ -761,7 +774,7 @@ class bmatrix:
         BROW[-numb] = 1.0
         return BROW
 
-    def prepare_sum(self, coord, invlat, BROW):
+    def prepare_sum(self, coord, BROW):
         #XROW=np.zeros(len(BROW),dtype=float)
         for i in range(len(coord.tag)):
             XROW = np.zeros(len(BROW), dtype=float)
@@ -769,47 +782,47 @@ class bmatrix:
                                             coord.what[i], [None],
                                             coord.where[i], 0.0, 'free')
             if coord.tag[i] == 'X':
-                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord,0,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord, 0, XROW)
             if coord.tag[i] == 'Y':
-                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord,1,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord, 1, XROW)
             if coord.tag[i] == 'Z':
-                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord,2,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_sing(tcoord, 2, XROW)
             if coord.tag[i] == 'fX':
-                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,0,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord, 0, XROW)
             if coord.tag[i] == 'fY':
-                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,1,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord, 1, XROW)
             if coord.tag[i] == 'fZ':
-                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,2,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord, 2, XROW)
             if coord.tag[i] == 'R':
-                BROW=BROW+coord.coefs[i]*self.prepare_l(tcoord,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_l(tcoord, XROW)
             if coord.tag[i] == 'M':
-                BROW=BROW+coord.coefs[i]*self.prepare_m(tcoord,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_m(tcoord, XROW)
             if coord.tag[i] == 'A':
-                BROW=BROW+coord.coefs[i]*self.prepare_a(tcoord,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_a(tcoord, XROW)
             if coord.tag[i] == 'T':
-                BROW=BROW+coord.coefs[i]*self.prepare_dh(tcoord,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_dh(tcoord, XROW)
             if coord.tag[i] == 'tV':
-                BROW=BROW+coord.coefs[i]*self.prepare_tv(tcoord,invlat,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_tv(tcoord, XROW)
             if coord.tag[i] == 'RatioR':
-                #BROW=BROW+coord.coefs[i]*self.prepare_ratior(cartesian,tcoord,cell,invlat,BROW)
-                BROW=BROW+coord.coefs[i]*self.prepare_ratior(tcoord,invlat,XROW)
+                #BROW=BROW+coord.coefs[i]*self.prepare_ratior(cartesian,tcoord,cell,invcell,BROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_ratior(tcoord, XROW)
             if coord.tag[i] == 'LR':
-                BROW=BROW+coord.coefs[i]*self.prepare_lr(tcoord,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_lr(tcoord, XROW)
             if coord.tag[i] == 'LA':
-                BROW=BROW+coord.coefs[i]*self.prepare_la(tcoord,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_la(tcoord, XROW)
             if coord.tag[i] == 'LV':
                 BROW=BROW+coord.coefs[i]*self.prepare_lv(XROW)
             if coord.tag[i] == 'RatioLR':
-                BROW=BROW+coord.coefs[i]*self.prepare_ratiolr(tcoord,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_ratiolr(tcoord, XROW)
             if coord.tag[i] == 'hX':
-                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord,0,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord, 0, XROW)
             if coord.tag[i] == 'hY':
-                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord,1,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord, 1, XROW)
             if coord.tag[i] == 'hZ':
-                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord,2,XROW)
+                BROW=BROW+coord.coefs[i]*self.prepare_latsing(tcoord, 2, XROW)
         return BROW
 
-    def prepare_norm(self, coord, invlat, BROW):
+    def prepare_norm(self, coord, BROW):
 
         complexcoord = 0.0
         for i in range(len(coord.tag)):
@@ -820,17 +833,17 @@ class bmatrix:
                 dist = self.cartesian[tcoord.what[0]][0]
                 complexcoord += ((coord.coefs[i]**2) * dist)
                 BROW = BROW + (coord.coefs[i]**2) * dist * \
-                    self.prepare_sing(tcoord, 0, invlat, BROW)
+                    self.prepare_sing(tcoord, 0, BROW)
             if coord.tag[i] == 'Y':
                 dist = self.cartesian[tcoord.what[0]][1]
                 complexcoord += ((coord.coefs[i]**2) * dist)
                 BROW = BROW + (coord.coefs[i]**2) * dist * \
-                    self.prepare_sing(tcoord, 1, invlat, BROW)
+                    self.prepare_sing(tcoord, 1, BROW)
             if coord.tag[i] == 'Z':
                 dist = self.cartesian[tcoord.what[0]][2]
                 complexcoord += ((coord.coefs[i]**2) * dist)
                 BROW = BROW + (coord.coefs[i]**2) * dist * \
-                    self.prepare_sing(tcoord, 2, invlat, BROW)
+                    self.prepare_sing(tcoord, 2, BROW)
             if coord.tag[i] == 'R':
                 a = self.cartesian[tcoord.what[0]] + np.dot(tcoord.where[0],
                                                             self.cell)
@@ -840,8 +853,7 @@ class bmatrix:
                 dist = np.linalg.norm(vector)
                 complexcoord += ((coord.coefs[i]**2) * dist)
                 BROW = BROW + (coord.coefs[i]**2) * dist * \
-                    self.prepare_l(tcoord, invlat,
-                                   np.zeros(len(BROW), dtype=float))
+                    self.prepare_l(tcoord, np.zeros(len(BROW), dtype=float))
             if coord.tag[i] == 'A':
                 a = self.cartesian[tcoord.what[0]] + np.dot(tcoord.where[0],
                                                             self.cell)
@@ -857,8 +869,7 @@ class bmatrix:
                 alpha = acos(cosalpha)
                 complexcoord += ((coord.coefs[i]**2) * alpha)
                 BROW = BROW + (coord.coefs[i]**2) * alpha * \
-                    self.prepare_a(tcoord, invlat,
-                                   np.zeros(len(BROW), dtype=float))
+                    self.prepare_a(tcoord, np.zeros(len(BROW), dtype=float))
             if coord.tag[i] == 'T':
                 a = self.cartesian[tcoord.what[0]] + np.dot(tcoord.where[0],
                                                             self.cell)
@@ -885,12 +896,11 @@ class bmatrix:
                     dangle = -dangle
                 complexcoord += ((coord.coefs[i]**2) * dangle)
                 BROW = BROW + (coord.coefs[i]**2) * dangle * \
-                    self.prepare_dh(tcoord, invlat,
-                                    np.zeros(len(BROW), dtype=float))
+                    self.prepare_dh(tcoord, np.zeros(len(BROW), dtype=float))
         BROW = BROW / complexcoord**(0.5)
         return BROW
 
-    def prepare_cnum(self, coord, invlat, BROW):
+    def prepare_cnum(self, coord, BROW):
 
         for i in range(len(coord.tag)):
             if coord.tag[i] == 'R':
@@ -911,7 +921,7 @@ class bmatrix:
                         dummyA = 1.0001
                     dummyC = 1.0 - dummyA**9
                     dummyD = 1.0 - dummyA**14
-                    BROW_ = self.prepare_l(tcoord, invlat,
+                    BROW_ = self.prepare_l(tcoord,
                                            np.zeros(len(BROW), dtype=float))
                     BROW = BROW - 9.0 * BROW_ * (dummyA**9.0 / dist) / dummyD
                     BROW = BROW + 14.0 * dummyC * BROW_ * (dummyA**14.0 / dist) / dummyD**2
