@@ -10,7 +10,6 @@ from collections import Counter, OrderedDict
 import numpy as np
 from scipy.constants import angstrom, value
 
-from math import *
 from string import *
 from fpformat import *
 
@@ -94,7 +93,7 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
             primcoords[i].value = deal.internals[i]
         print('Internal coordinates were read from the file: internals.pkl')
     else:
-        intrn = intcoord.Intern(atomtypes, cov_radii, ascale, bscale,
+        intrn = intcoord.Internals(atomtypes, cov_radii, ascale, bscale,
                                 anglecrit, torsioncrit, fragcoord,
                                 relax, torsions, subst, natoms,
                                 cell, fractional, cartesian, atomcounts)
@@ -159,7 +158,7 @@ def main():
         print('Internal coordinates were read-in from the file COORDINATES.gadget')
     except IOError:
         print('Internal coordinates were newly generated')
-        intrn = intcoord.Intern(atomquality, args.atradii, args.ascale, args.bscale, args.anglecrit,
+        intrn = intcoord.Internals(atomquality, args.atradii, args.ascale, args.bscale, args.anglecrit,
                                 args.torsioncrit, args.fragcoord, args.relax, args.torsions,
                                 args.subst, inpt.numofatoms, inpt.lattmat, inpt.coords_d,
                                 inpt.coords_c, inpt.types)
@@ -200,16 +199,15 @@ def main():
 
     t0 = time.time()
 
-    f = open('bmat.dat','w')
+    f = open('bmat.dat', 'w')
     row = 'Dimensions'
-    f.write(row+'\n')
-    row=str(len(Bmat))+'\t'+str(len(Bmat[0]))
-    f.write(row+'\n')
+    f.write(row + '\n')
+    row = str(len(Bmat)) + '\t' + str(len(Bmat[0]))
+    f.write(row + '\n')
     f.write('\n')
 
-
     row = "Coordinates (au):"
-    f.write(row+'\n')
+    f.write(row + '\n')
     for i in range(len(primcoords)):
         row=str(primcoords[i].tag)+'  '+str(primcoords[i].value)
         if primcoords[i].tag=='R' or primcoords[i].tag=="IR1" or primcoords[i].tag=="IR6":

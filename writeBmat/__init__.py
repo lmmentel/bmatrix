@@ -1,1 +1,2 @@
-from writeBmat import get_internals 
+
+from writeBmat import get_internals

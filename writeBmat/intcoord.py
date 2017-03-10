@@ -10,7 +10,7 @@ import numpy as np
 from physconstants import physical_constants as pC
 
 
-class Intern:
+class Internals:
     """
     Identification of primitive internal coordinates.
 
@@ -77,11 +77,11 @@ class Intern:
         self.cell = cell
         self.fractional = fractional
         self.cartesian = cartesian
-        self.trust = 0.15  # criteria for acceptance of angle
+        self.trust = 0.15                    # criteria for acceptance of angle
 
         verbose = False
         if verbose:
-            print(' input args in <Intern> '.center(80, '='))
+            print('input args in <Internals> '.center(80, '='))
             print('atomtypes   : ', atomtypes)
             print('radii       : ', radii)
             print('ascale      : ', ascale)
