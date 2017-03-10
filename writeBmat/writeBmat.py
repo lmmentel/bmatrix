@@ -34,11 +34,6 @@ class OrderedCounter(Counter, OrderedDict):
     pass
 
 
-def write_matrix(matrix, fname):
-    'Write a matrix to file'
-    np.save(fname, matrix)
-
-
 def read_internals(fname):
     'Read internal coordinates from a file'
 
@@ -252,7 +247,6 @@ def main():
 
     print(time.time() - t0, "seconds wall time for writing on bmat.dat")
 
+
 if __name__ == '__main__':
     main()
-
-
