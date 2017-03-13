@@ -71,7 +71,7 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
     natoms = atoms.get_number_of_atoms()
     ndof = 3 * natoms
     counts = OrderedCounter(symbols)
-    atomtypes = [s.lower() for s in counts.keys()]
+    atomtypes = [s for s in counts.keys()]
     atomcounts = counts.values()
 
     # convert and assign the cell and cartesian coordiantes
