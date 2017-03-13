@@ -1,13 +1,15 @@
 
 from __future__ import print_function
 
+import logging
 from math import *
-
-import datastruct
-
 import numpy as np
 
+import datastruct
 from physconstants import physical_constants as pC
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
 class Internals:
@@ -79,27 +81,24 @@ class Internals:
         self.cartesian = cartesian
         self.trust = 0.15                    # criteria for acceptance of angle
 
-        verbose = False
-        if verbose:
-            print('input args in <Internals> '.center(80, '='))
-            print('atomtypes   : ', atomtypes)
-            print('radii       : ', radii)
-            print('ascale      : ', ascale)
-            print('bscale      : ', bscale)
-            print('anglecrit   : ', anglecrit)
-            print('torsioncrit : ', torsioncrit)
-            print('fragcoord   : ', fragcoord)
-            print('relax       : ', relax)
-            print('TORS        : ', TORS)
-            print('SUBST       : ', SUBST)
-            print('natoms      : ', natoms)
-            print('cell     : ')
-            print(cell)
-            print('fractional     : ')
-            print(fractional)
-            print('cartesian   : ')
-            print(cartesian)
-            print('atomcounts       : ', atomcounts)
+        log.info('atomtypes   : {}'.format(atomtypes))
+        log.info('radii       : {}'.format(radii))
+        log.info('ascale      : {}'.format(ascale))
+        log.info('bscale      : {}'.format(bscale))
+        log.info('anglecrit   : {}'.format(anglecrit))
+        log.info('torsioncrit : {}'.format(torsioncrit))
+        log.info('fragcoord   : {}'.format(fragcoord))
+        log.info('relax       : {}'.format(relax))
+        log.info('TORS        : {}'.format(TORS))
+        log.info('SUBST       : {}'.format(SUBST))
+        log.info('natoms      : {}'.format(natoms))
+        log.debug('cell     : ')
+        log.debug(cell)
+        log.debug('fractional     : ')
+        log.debug(fractional)
+        log.debug('cartesian   : ')
+        log.debug(cartesian)
+        log.debug('atomcounts       : ', atomcounts)
 
         ascale = ascale / pC['AU2A']
 
@@ -109,13 +108,17 @@ class Internals:
         for i in range(1, len(katoms)):
             katoms[i] = katoms[i] + katoms[i - 1]
 
+        log.info('katoms: {}'.format(katoms))
+
         self.atomictags = []
         for i in range(len(atomcounts)):
             for j in range(atomcounts[i]):
                 self.atomictags.append(self.atomtypes[i])
 
+        log.info('self.atomictags: {}'.format(self.atomictags))
+
         # print radii
-        atradii = ascale * np.array(radii)
+        atradii = ascale * np.array(self.radii)
         atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
 
         self.set_criteria(atrad)
@@ -152,11 +155,24 @@ class Internals:
         shortradii = 0.2 * np.array(atradii)    # minimal lengths
         longradii = np.array(atradii)           # upper limit for bond length
 
+        log.info('atradii: {}'.format(atradii))
+        log.info('shortradii: {}'.format(shortradii))
+        log.info('longradii: {}'.format(longradii))
+
         bonds = self.bond_lengths(intrawhat, intrawhere,
                                   allcartesian, allwhat, allwhere, shortradii,
                                   longradii, katoms, 'R')
 
+        log.info('bonds:')
+        for i, b in enumerate(bonds):
+            log.info('{}: {}'.format(i, b))
+
         fragments, substrate = self.frac_struct(bonds, SUBST)
+
+        for i, f in enumerate(fragments):
+            log.info('fragment {}: {}'.format(i, f))
+
+        log.info('substrate: {}'.format(substrate))
 
         if len(bonds) == 0:
             print('no bonds detected, are you sure about the at. rad.?')
@@ -226,6 +242,7 @@ class Internals:
             for i in range(len(longradii)):
                 if self.atomtypes[i] == 'H':
                     longradii[i] *= 2.0
+                    log.info('scaling longradii, atomtypes[i] == "H"')
 
             longbonds = self.bond_fragments(fragments, substrate, longradii,
                                             katoms, 'R')
