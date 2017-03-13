@@ -98,10 +98,9 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
 #                                   anglecrit, torsioncrit, fragcoord,
 #                                   relax, torsions, subst)
 
-        intrn = intcoord.Internals(atomtypes, cov_radii, ascale, bscale,
+        intrn = intcoord.Internals(atoms, cov_radii, ascale, bscale,
                                    anglecrit, torsioncrit, fragcoord,
-                                   relax, torsions, subst, natoms,
-                                   cell, fractional, cartesian, atomcounts)
+                                   relax, torsions, subst)
 
         primcoords = intrn.internalcoords
         write_internals(primcoords, 'internals.pkl')

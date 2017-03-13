@@ -2,14 +2,22 @@
 from __future__ import print_function
 
 import logging
+from collections import Counter, OrderedDict
 from math import *
 import numpy as np
+from scipy.constants import angstrom, value
 
 import datastruct
 from physconstants import physical_constants as pC
 
+ang2bohr = angstrom / value('atomic unit of length')
+
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+class OrderedCounter(Counter, OrderedDict):
+    pass
 
 
 class Internals:
@@ -63,47 +71,46 @@ class Internals:
 
     """
 
-    def __init__(self, atomtypes, radii, ascale, bscale, anglecrit,
-                 torsioncrit, fragcoord, relax, TORS, SUBST, natoms,
-                 cell, fractional, cartesian, atomcounts):
+    def __init__(self, atoms, radii, ascale, bscale, anglecrit,
+                 torsioncrit, fragcoord, relax, tors, subst):
 
-        self.atomtypes = atomtypes
+        self.natoms = len(atoms)
+        self.cell = atoms.get_cell() * ang2bohr
+        self.fractional = atoms.get_scaled_positions()
+        self.cartesian = atoms.get_positions() * ang2bohr
+        self.symbols = atoms.get_chemical_symbols()
+
+        self.atomcounter = OrderedCounter(self.symbols)
         self.radii = radii
-        self.ascale = ascale
+        self.ascale = ascale / pC['AU2A']
         self.bscale = bscale
         self.anglecrit = anglecrit
         self.torsioncrit = torsioncrit
         self.fragcoord = fragcoord
-        self.atoms = natoms
         self.relax = relax
-        self.natoms = natoms
-        self.cell = cell
-        self.fractional = fractional
-        self.cartesian = cartesian
+        self.tors = tors
+        self.subst = subst
         self.trust = 0.15                    # criteria for acceptance of angle
 
-        log.info('atomtypes   : {}'.format(atomtypes))
-        log.info('radii       : {}'.format(radii))
-        log.info('ascale      : {}'.format(ascale))
-        log.info('bscale      : {}'.format(bscale))
-        log.info('anglecrit   : {}'.format(anglecrit))
-        log.info('torsioncrit : {}'.format(torsioncrit))
-        log.info('fragcoord   : {}'.format(fragcoord))
-        log.info('relax       : {}'.format(relax))
-        log.info('TORS        : {}'.format(TORS))
-        log.info('SUBST       : {}'.format(SUBST))
-        log.info('natoms      : {}'.format(natoms))
-        log.debug('cell     : ')
-        log.debug(cell)
-        log.debug('fractional     : ')
-        log.debug(fractional)
-        log.debug('cartesian   : ')
-        log.debug(cartesian)
-        log.debug('atomcounts       : ', atomcounts)
+        log.info('radii       : {}'.format(self.radii))
+        log.info('ascale      : {}'.format(self.ascale))
+        log.info('bscale      : {}'.format(self.bscale))
+        log.info('anglecrit   : {}'.format(self.anglecrit))
+        log.info('torsioncrit : {}'.format(self.torsioncrit))
+        log.info('fragcoord   : {}'.format(self.fragcoord))
+        log.info('relax       : {}'.format(self.relax))
+        log.info('tors        : {}'.format(self.tors))
+        log.info('subst       : {}'.format(self.subst))
+        log.info('natoms      : {}'.format(self.natoms))
+        log.info('symbols     : {}'.format(self.symbols))
+        log.debug('cell       : ')
+        log.debug(self.cell)
+        log.debug('fractional : ')
+        log.debug(self.fractional)
+        log.debug('cartesian  : ')
+        log.debug(self.cartesian)
 
-        ascale = ascale / pC['AU2A']
-        # print radii
-        self.radii = ascale * np.array(self.radii)
+        self.radii = self.ascale * np.array(self.radii)
         self.short_radii = 0.2 * np.array(self.radii)    # minimal lengths
         self.long_radii = np.array(self.radii)           # upper limit for bond length
 
@@ -111,20 +118,12 @@ class Internals:
         log.info('short_radii: {}'.format(self.short_radii))
         log.info('long_radii: {}'.format(self.long_radii))
 
-        katoms = np.array(atomcounts) / 1
-        if len(katoms) != len(radii):
-            raise IOError
-        for i in range(1, len(katoms)):
-            katoms[i] = katoms[i] + katoms[i - 1]
+        katoms = np.cumsum(self.atomcounter.values())
+        if len(katoms) != len(self.radii):
+            raise ValueError('len(katoms) != len(radii)'
+                             ', {} != {}'.format(len(katoms), len(self.radii)))
 
         log.info('katoms: {}'.format(katoms))
-
-        self.atomictags = []
-        for i in range(len(atomcounts)):
-            for j in range(atomcounts[i]):
-                self.atomictags.append(self.atomtypes[i])
-
-        log.info('self.atomictags: {}'.format(self.atomictags))
 
         self.set_criteria()
         self.pexcluded = [None, None, None]
@@ -164,7 +163,7 @@ class Internals:
         for i, b in enumerate(bonds):
             log.info('{}: {}'.format(i, b))
 
-        fragments, substrate = self.frac_struct(bonds, SUBST)
+        fragments, substrate = self.frac_struct(bonds, self.subst)
 
         for i, f in enumerate(fragments):
             log.info('fragment {}: {}'.format(i, f))
@@ -179,7 +178,7 @@ class Internals:
         self.internalcoords = []
         self.longinternalcoords = []
 
-        if TORS == 1:
+        if self.tors == 1:
             torsions = self.set_dihedrals(iangwhat, iangwhere, 'T')
             self.internalcoords = bonds + angles + torsions
         else:
@@ -194,17 +193,17 @@ class Internals:
             swhere = [0, 0, 0]
             for i in range(len(self.cartesian)):
                 singles.append(datastruct.Complextype('simple', [1], 'X', [i],
-                                                      [self.atomictags[i]],
+                                                      [self.symbols[i]],
                                                       [swhere],
                                                       self.cartesian[i][0],
                                                       'free'))
                 singles.append(datastruct.Complextype('simple', [1], 'Y', [i],
-                                                      [self.atomictags[i]],
+                                                      [self.symbols[i]],
                                                       [swhere],
                                                       self.cartesian[i][1],
                                                       'free'))
                 singles.append(datastruct.Complextype('simple', [1], 'Z', [i],
-                                                      [self.atomictags[i]],
+                                                      [self.symbols[i]],
                                                       [swhere],
                                                       self.cartesian[i][2],
                                                       'free'))
@@ -409,8 +408,8 @@ class Internals:
                                     ibonds.append(r)
                                     ibondwhat.append([substrate[jj],
                                                       fragments[i][ii]])
-                                    ibondwhattags.append([self.atomictags[substrate[jj]],
-                                                          self.atomictags[fragments[i][ii]]])
+                                    ibondwhattags.append([self.symbols[substrate[jj]],
+                                                          self.symbols[fragments[i][ii]]])
                                     ibondwhere.append([[0, 0, 0],
                                                       [t1, t2, t3]])
 
@@ -445,8 +444,8 @@ class Internals:
                                                 ibonds.append(r)
                                                 ibondwhat.append([fragments[i][ii],
                                                                   fragments[j][jj]])
-                                                ibondwhattags.append([self.atomictags[fragments[i][ii]],
-                                                                      self.atomictags[fragments[j][jj]]])
+                                                ibondwhattags.append([self.symbols[fragments[i][ii]],
+                                                                      self.symbols[fragments[j][jj]]])
                                                 ibondwhere.append([[0, 0, 0],
                                                                    [t1, t2, t3]])
 
@@ -497,8 +496,8 @@ class Internals:
                 if length > criteria_s and length <= criteria_l and what[i] <= allwhat[j]:
                     ibonds.append(length)
                     ibondwhat.append([what[i], allwhat[j]])
-                    ibondwhattags.append([self.atomictags[what[i]],
-                                          self.atomictags[allwhat[j]]])
+                    ibondwhattags.append([self.symbols[what[i]],
+                                          self.symbols[allwhat[j]]])
                     ibondwhere.append([where[i], allwhere[j]])
         ksort = []
         for i in range(len(ibonds)):
@@ -567,16 +566,16 @@ class Internals:
                         if sin(angle) > self.trust:
                             if iangwhat[i][k] < iangwhat[i][l]:
                                 awhat = [iangwhat[i][k], i, iangwhat[i][l]]
-                                awhattags = [self.atomictags[iangwhat[i][k]],
-                                             self.atomictags[i],
-                                             self.atomictags[iangwhat[i][l]]]
+                                awhattags = [self.symbols[iangwhat[i][k]],
+                                             self.symbols[i],
+                                             self.symbols[iangwhat[i][l]]]
                                 awhere = [iangwhere[i][k], [0, 0, 0],
                                           iangwhere[i][l]]
                             else:
                                 awhat = [iangwhat[i][l], i, iangwhat[i][k]]
-                                awhattags = [self.atomictags[iangwhat[i][l]],
-                                             self.atomictags[i],
-                                             self.atomictags[iangwhat[i][k]]]
+                                awhattags = [self.symbols[iangwhat[i][l]],
+                                             self.symbols[i],
+                                             self.symbols[iangwhat[i][k]]]
                                 awhere = [iangwhere[i][l], [0, 0, 0],
                                           iangwhere[i][k]]
                                 angles.append(datastruct.Complextype('simple',
@@ -585,7 +584,7 @@ class Internals:
                         else:
                             continue
                             # awhat=[iangwhat[i][k],iangwhat[i][l]]
-                            # awhattags=[self.atomictags[iangwhat[i][k]],self.atomictags[iangwhat[i][l]]]
+                            # awhattags=[self.symbols[iangwhat[i][k]],self.symbols[iangwhat[i][l]]]
                             # awhere=[iangwhere[i][k],iangwhere[i][l]]
                             # emerbonds.append(datastruct.Complextype('simple',[1],'R',awhat,awhattags,\
                             # awhere,None,'free'))
@@ -609,16 +608,16 @@ class Internals:
             for j in range(len(iangwhat[indx1])):
                 if iangwhat[indx1][j] < indx2:
                     awhat = [iangwhat[indx1][j], indx1, indx2]
-                    awhattags = [self.atomictags[iangwhat[indx1][j]],
-                                 self.atomictags[indx1],
-                                 self.atomictags[indx2]]
+                    awhattags = [self.symbols[iangwhat[indx1][j]],
+                                 self.symbols[indx1],
+                                 self.symbols[indx2]]
                     awhere = [iangwhere[indx1][j], [0, 0, 0],
                               emerbonds[i].where[1] - emerbonds[i].where[0]]
                 else:
                     awhat = [indx2, indx1, iangwhat[indx1][j]]
-                    awhattags = [self.atomictags[indx2],
-                                 self.atomictags[indx1],
-                                 self.atomictags[iangwhat[indx1][j]]]
+                    awhattags = [self.symbols[indx2],
+                                 self.symbols[indx1],
+                                 self.symbols[iangwhat[indx1][j]]]
                     awhere = [emerbonds[i].where[1] - emerbonds[i].where[0],
                               [0, 0, 0], iangwhere[indx1][j]]
                 angle = self.calc_angle(awhat, awhere)
@@ -629,16 +628,16 @@ class Internals:
             for j in range(len(iangwhat[indx2])):
                 if iangwhat[indx2][j] < indx1:
                     awhat = [iangwhat[indx2][j], indx2, indx1]
-                    awhattags = [self.atomictags[iangwhat[indx2][j]],
-                                 self.atomictags[indx2],
-                                 self.atomictags[indx1]]
+                    awhattags = [self.symbols[iangwhat[indx2][j]],
+                                 self.symbols[indx2],
+                                 self.symbols[indx1]]
                     awhere = [iangwhere[indx2][j], [0, 0, 0],
                               emerbonds[i].where[0] - emerbonds[i].where[1]]
                 else:
                     awhat = [indx1, indx2, iangwhat[indx2][j]]
-                    awhattags = [self.atomictags[indx1],
-                                 self.atomictags[indx2],
-                                 self.atomictags[iangwhat[indx2][j]]]
+                    awhattags = [self.symbols[indx1],
+                                 self.symbols[indx2],
+                                 self.symbols[iangwhat[indx2][j]]]
                     awhere = [emerbonds[i].where[0] - emerbonds[i].where[1],
                               [0, 0, 0], iangwhere[indx2][j]]
                 angle = self.calc_angle(awhat, awhere)
@@ -706,10 +705,10 @@ class Internals:
                                 if itorsion is not None:
                                     torwhat = [firstwhat, secondwhat,
                                                thirdwhat, fourthwhat]
-                                    torwhattags = [self.atomictags[firstwhat],
-                                                   self.atomictags[secondwhat],
-                                                   self.atomictags[thirdwhat],
-                                                   self.atomictags[fourthwhat]]
+                                    torwhattags = [self.symbols[firstwhat],
+                                                   self.symbols[secondwhat],
+                                                   self.symbols[thirdwhat],
+                                                   self.symbols[fourthwhat]]
                                     torwhere = [firstwhere, secondwhere,
                                                 thirdwhere, fourthwhere]
                                     torsions.append(datastruct.Complextype(
