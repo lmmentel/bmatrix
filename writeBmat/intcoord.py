@@ -550,8 +550,8 @@ class Internals:
                 value = np.linalg.norm(vec)
                 both = [vec, value]
                 vectors.append(both)
-            for k in range(len(vectors)):
-                for l in range(len(vectors)):
+            for k, _ in enumerate(vectors):
+                for l, _ in enumerate(vectors):
                     #if l<k:
                     if l < k and iangwhat[i][k] != i and iangwhat[i][l] != i:
                     #if l<k and iangwhat[i][k]!=iangwhat[i][l]:   # angles containing one atom twice -this has to be solved
