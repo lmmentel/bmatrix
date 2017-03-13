@@ -16,6 +16,16 @@ class Complextype:
         self.status = status
         self.labels = None
 
+    def __repr__(self):
+
+        return '<Complextype(' + ', '.join([
+            'dtyp="{}"'.format(self.dtyp),
+            'tag="{}"'.format(self.tag),
+            'value={}'.format(self.value),
+            'what={}'.format(', '.join([str(i) for i in self.what])),
+            'whattags={}'.format(', '.join([str(i) for i in self.whattags])),
+            'where={}'.format(', '.join([str(i) for i in self.where]))]) + ')>'
+
 
 class Linesearch:
 

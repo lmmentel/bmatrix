@@ -1,13 +1,15 @@
 
 from __future__ import print_function
 
+import logging
 from math import *
-
-import datastruct
-
 import numpy as np
 
+import datastruct
 from physconstants import physical_constants as pC
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
 class Internals:
@@ -19,7 +21,8 @@ class Internals:
             List of atom's symbols
 
         radii (list) :
-            List of atomic radii per symbol (same order as atomtypes)
+            List of atomic radii per symbol (same order as atomtypes) in
+            atomic units
 
         ascale (float) :
             Scaling factor for the radii
@@ -79,29 +82,34 @@ class Internals:
         self.cartesian = cartesian
         self.trust = 0.15                    # criteria for acceptance of angle
 
-        verbose = False
-        if verbose:
-            print('input args in <Internals> '.center(80, '='))
-            print('atomtypes   : ', atomtypes)
-            print('radii       : ', radii)
-            print('ascale      : ', ascale)
-            print('bscale      : ', bscale)
-            print('anglecrit   : ', anglecrit)
-            print('torsioncrit : ', torsioncrit)
-            print('fragcoord   : ', fragcoord)
-            print('relax       : ', relax)
-            print('TORS        : ', TORS)
-            print('SUBST       : ', SUBST)
-            print('natoms      : ', natoms)
-            print('cell     : ')
-            print(cell)
-            print('fractional     : ')
-            print(fractional)
-            print('cartesian   : ')
-            print(cartesian)
-            print('atomcounts       : ', atomcounts)
+        log.info('atomtypes   : {}'.format(atomtypes))
+        log.info('radii       : {}'.format(radii))
+        log.info('ascale      : {}'.format(ascale))
+        log.info('bscale      : {}'.format(bscale))
+        log.info('anglecrit   : {}'.format(anglecrit))
+        log.info('torsioncrit : {}'.format(torsioncrit))
+        log.info('fragcoord   : {}'.format(fragcoord))
+        log.info('relax       : {}'.format(relax))
+        log.info('TORS        : {}'.format(TORS))
+        log.info('SUBST       : {}'.format(SUBST))
+        log.info('natoms      : {}'.format(natoms))
+        log.debug('cell     : ')
+        log.debug(cell)
+        log.debug('fractional     : ')
+        log.debug(fractional)
+        log.debug('cartesian   : ')
+        log.debug(cartesian)
+        log.debug('atomcounts       : ', atomcounts)
 
         ascale = ascale / pC['AU2A']
+        # print radii
+        self.radii = ascale * np.array(self.radii)
+        self.short_radii = 0.2 * np.array(self.radii)    # minimal lengths
+        self.long_radii = np.array(self.radii)           # upper limit for bond length
+
+        log.info('radii: {}'.format(self.radii))
+        log.info('short_radii: {}'.format(self.short_radii))
+        log.info('long_radii: {}'.format(self.long_radii))
 
         katoms = np.array(atomcounts) / 1
         if len(katoms) != len(radii):
@@ -109,16 +117,16 @@ class Internals:
         for i in range(1, len(katoms)):
             katoms[i] = katoms[i] + katoms[i - 1]
 
+        log.info('katoms: {}'.format(katoms))
+
         self.atomictags = []
         for i in range(len(atomcounts)):
             for j in range(atomcounts[i]):
                 self.atomictags.append(self.atomtypes[i])
 
-        # print radii
-        atradii = ascale * np.array(radii)
-        atrad = max(np.array(atradii))  # maximal allowed length of bond in the system
+        log.info('self.atomictags: {}'.format(self.atomictags))
 
-        self.set_criteria(atrad)
+        self.set_criteria()
         self.pexcluded = [None, None, None]
         self.mexcluded = [None, None, None]
         intrawhat = []
@@ -149,14 +157,19 @@ class Internals:
         allwhere = intrawhere + interwhere
         allcartesian = self.dirto_cart(allfractional)  # modified cell converted to cart coords.
 
-        shortradii = 0.2 * np.array(atradii)    # minimal lengths
-        longradii = np.array(atradii)           # upper limit for bond length
-
         bonds = self.bond_lengths(intrawhat, intrawhere,
-                                  allcartesian, allwhat, allwhere, shortradii,
-                                  longradii, katoms, 'R')
+                                  allcartesian, allwhat, allwhere, katoms, 'R')
+
+        log.info('bonds:')
+        for i, b in enumerate(bonds):
+            log.info('{}: {}'.format(i, b))
 
         fragments, substrate = self.frac_struct(bonds, SUBST)
+
+        for i, f in enumerate(fragments):
+            log.info('fragment {}: {}'.format(i, f))
+
+        log.info('substrate: {}'.format(substrate))
 
         if len(bonds) == 0:
             print('no bonds detected, are you sure about the at. rad.?')
@@ -175,13 +188,6 @@ class Internals:
         self.angles = angles
 
         #######################################################################
-
-        if len(fragments) > 1:
-            largestfrag = 0
-            maxfr = 0
-            for i in range(len(fragments)):
-                if len(fragments[i]) > maxfr:
-                    largestfrag = i
 
         if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord == 0:
             singles = []
@@ -222,31 +228,39 @@ class Internals:
             self.internalcoords += singles
 
         if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord != 0:
-            longradii = bscale * atradii
-            for i in range(len(longradii)):
-                if self.atomtypes[i] == 'H':
-                    longradii[i] *= 2.0
+            longradii = bscale * self.radii
+
+            #for i in range(len(longradii)):
+            #    if self.atomtypes[i] == 'H':
+            #        longradii[i] *= 2.0
+            #        log.info('scaling longradii, atomtypes[i] == "H"')
 
             longbonds = self.bond_fragments(fragments, substrate, longradii,
                                             katoms, 'R')
+
+            log.info('longbonds:')
+            for i, b in enumerate(longbonds):
+                log.info('longbond{}: {}'.format(i, b))
 
             if self.fragcoord == 2:
                 for j in range(len(longbonds)):
                     longbonds[j].value = 5 / longbonds[j].value
                     longbonds[j].tag = 'IR1'
-                if self.fragcoord == 3:
-                    for j in range(len(longbonds)):
-                        longbonds[j].value = 2000 / longbonds[j].value**6
-                        longbonds[j].tag = 'IR6'
+            elif self.fragcoord == 3:
+                for j in range(len(longbonds)):
+                    longbonds[j].value = 2000 / longbonds[j].value**6
+                    longbonds[j].tag = 'IR6'
 
             for i in range(len(longbonds)):
                 self.internalcoords += [longbonds[i]]
                 self.longinternalcoords += [longbonds[i]]
 
-    def set_criteria(self, atrad):
+    def set_criteria(self):
         """
         Projection of the bond-radius to the lattice vectors.
         """
+
+        max_radius = np.max(self.radii)
 
         criteria = [None, None, None]
         # creates cutoff criterion
@@ -262,9 +276,9 @@ class Internals:
         cang21 = sum(norm2 * self.cell[1])  # cos of angle between norm2 and cell[1]
         cang32 = sum(norm3 * self.cell[2])  # cos of angle between norm3 and cell[2]
 
-        criteria[0] = abs(2 * atrad / cang10)
-        criteria[1] = abs(2 * atrad / cang21)
-        criteria[2] = abs(2 * atrad / cang32)
+        criteria[0] = abs(2 * max_radius / cang10)
+        criteria[1] = abs(2 * max_radius / cang21)
+        criteria[2] = abs(2 * max_radius / cang32)
 
         self.criteria = np.array(criteria)
 
@@ -453,8 +467,8 @@ class Internals:
 
         return bonds
 
-    def bond_lengths(self, what, where, allcart, allwhat, allwhere,
-                     radii_s, radii_l, katoms, tag):
+    def bond_lengths(self, what, where, allcart, allwhat, allwhere, katoms,
+                     tag):
         """
         Finds and calculates bond lengths.
         """
@@ -471,13 +485,13 @@ class Internals:
                 target = 0
                 while what[i] >= katoms[target]:
                     target = target + 1
-                radii1_s = radii_s[target]
-                radii1_l = radii_l[target]
+                radii1_s = self.short_radii[target]
+                radii1_l = self.long_radii[target]
                 target = 0
                 while allwhat[j] >= katoms[target]:
                     target = target + 1
-                radii2_s = radii_s[target]
-                radii2_l = radii_l[target]
+                radii2_s = self.short_radii[target]
+                radii2_l = self.long_radii[target]
                 criteria_s = (radii1_s + radii2_s)
                 criteria_l = (radii1_l + radii2_l)
                 if length > criteria_s and length <= criteria_l and what[i] <= allwhat[j]:
