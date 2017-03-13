@@ -290,14 +290,14 @@ class Internals:
         pexclusions = []
         nexclusions = []
 
-        # excluded for positive translation
-        for i in range(len(self.fractional)):
+        for i, f in enumerate(self.fractional):
+
+            # excluded for positive translation
             if self.fractional[i][which] > self.criteria[which]:
                 pexclusions = pexclusions + [i]
 
-        # excluded for negative translation
-        for i in range(len(self.fractional)):
-            if self.fractional[i][which] < 1 - self.criteria[which]:
+            # excluded for negative translation
+            elif self.fractional[i][which] < 1 - self.criteria[which]:
                 nexclusions = nexclusions + [i]
 
         return pexclusions, nexclusions
