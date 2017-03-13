@@ -71,7 +71,7 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
     natoms = atoms.get_number_of_atoms()
     ndof = 3 * natoms
     counts = OrderedCounter(symbols)
-    atomtypes = [s.lower() for s in counts.keys()]
+    atomtypes = [s for s in counts.keys()]
     atomcounts = counts.values()
 
     # convert and assign the cell and cartesian coordiantes
@@ -93,10 +93,16 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
             primcoords[i].value = deal.internals[i]
         print('Internal coordinates were read from the file: internals.pkl')
     else:
+#        intrn = intcoord.Internals(cartesian, fractional, cell, symbols,
+#                                   cov_radii, ascale, bscale,
+#                                   anglecrit, torsioncrit, fragcoord,
+#                                   relax, torsions, subst)
+
         intrn = intcoord.Internals(atomtypes, cov_radii, ascale, bscale,
-                                anglecrit, torsioncrit, fragcoord,
-                                relax, torsions, subst, natoms,
-                                cell, fractional, cartesian, atomcounts)
+                                   anglecrit, torsioncrit, fragcoord,
+                                   relax, torsions, subst, natoms,
+                                   cell, fractional, cartesian, atomcounts)
+
         primcoords = intrn.internalcoords
         write_internals(primcoords, 'internals.pkl')
         print('Internal coordinates were newly generated, save to: internals.pkl')
