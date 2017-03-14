@@ -22,8 +22,8 @@ class Internals:
     Identification of primitive internal coordinates.
 
     Args:
-        atomtypes (list of str) :
-            List of atom's symbols
+        atoms (ase.Atoms) :
+            Atoms object from ASE package
 
         radii (list) :
             List of atomic radii per symbol (same order as atomtypes) in
@@ -47,29 +47,15 @@ class Internals:
         relax (bool) :
             Relax
 
-        tors :
+        torsions (bool) :
+            If ``True`` the torsions will be calculated
 
         subs (int) :
-
-        natoms (int) :
-            Number of atoms
-
-        cell (array_like) :
-            Lattice vectors in atomic units (3 x 3)
-
-        fractional (array_like):
-            Fractional coordinates (natoms x 3)
-
-        cartesian (array_like) :
-            Cartesian coordinates (natoms x 3)
-
-        atomcounts (list of ints) :
-            List of counts of different atoms
 
     """
 
     def __init__(self, atoms, radii, ascale, bscale, anglecrit,
-                 torsioncrit, fragcoord, relax, tors, subst):
+                 torsioncrit, fragcoord, relax, do_torsions, subst):
 
         self.natoms = len(atoms)
         self.cell = atoms.get_cell() * ANGS2BOHR
@@ -85,7 +71,7 @@ class Internals:
         self.torsioncrit = torsioncrit
         self.fragcoord = fragcoord
         self.relax = relax
-        self.tors = tors
+        self.do_torsions = do_torsions
         self.subst = subst
         self.trust = 0.15                    # criteria for acceptance of angle
 
@@ -96,7 +82,7 @@ class Internals:
         log.info('torsioncrit : {}'.format(self.torsioncrit))
         log.info('fragcoord   : {}'.format(self.fragcoord))
         log.info('relax       : {}'.format(self.relax))
-        log.info('tors        : {}'.format(self.tors))
+        log.info('do_torsions : {}'.format(self.do_torsions))
         log.info('subst       : {}'.format(self.subst))
         log.info('natoms      : {}'.format(self.natoms))
         log.info('symbols     : {}'.format(self.symbols))
@@ -175,7 +161,7 @@ class Internals:
         self.internalcoords = []
         self.longinternalcoords = []
 
-        if self.tors == 1:
+        if self.do_torsions:
             torsions = self.set_dihedrals(iangwhat, iangwhere, 'T')
             self.internalcoords = bonds + angles + torsions
         else:
