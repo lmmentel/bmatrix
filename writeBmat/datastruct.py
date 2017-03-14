@@ -3,6 +3,35 @@ import warnings
 
 
 class Complextype:
+    '''
+    A container for the internal coordinates
+
+    Args:
+
+        dtyp (str) :
+            Type
+
+        coeffs (list of int) :
+            Coefficients
+
+        tag (str) :
+            Coordinate tag, usually `R` - distance, `A` - angle,
+            `T` - torsion
+
+        what (list of int) :
+            Indices of atoms that belong to the coordinate
+
+        whattags (list of str) :
+            Symbols of the atoms that belong to the coordinate
+
+        where (list of arrays) :
+            List of unit cell indices singifying the origin of each
+            atom that belongs to the coordinate
+
+        value (float) :
+            value of the coordinate
+
+    '''
 
     def __init__(self, dtyp, coefs, tag, what, whattags, where, value, status):
 
@@ -246,29 +275,6 @@ covalent_radii_cordero = {
     'Zr': 3.307020719551199,
 }
 
-# Covalent radii from Cordero in Angstrom
-# covalent_radii_cordero = {
-#     'Ac': 2.15, 'Ag': 1.45, 'Al': 1.21, 'Am': 1.80, 'Ar': 1.06,
-#     'As': 1.19, 'At': 1.50, 'Au': 1.36, 'B':  0.84, 'Ba': 2.15,
-#     'Be': 0.96, 'Bi': 1.48, 'Br': 1.20, 'C':  0.73, 'Ca': 1.76,
-#     'Cd': 1.44, 'Ce': 2.04, 'Cl': 1.02, 'Cm': 1.69, 'Co': 1.38,
-#     'Cr': 1.39, 'Cs': 2.44, 'Cu': 1.32, 'Dy': 1.92, 'Er': 1.89,
-#     'Eu': 1.98, 'F':  0.57, 'Fe': 1.42, 'Fr': 2.60, 'Ga': 1.22,
-#     'Gd': 1.96, 'Ge': 1.20, 'H':  0.31, 'He': 0.28, 'Ff': 1.75,
-#     'Hg': 1.32, 'Ho': 1.92, 'I':  1.39, 'In': 1.42, 'Ir': 1.41,
-#     'K':  2.03, 'Kr': 1.16, 'La': 2.07, 'Li': 1.28, 'Lu': 1.87,
-#     'Mg': 1.41, 'Mn': 1.50, 'Mo': 1.54, 'N':  0.71, 'Na': 1.66,
-#     'Nb': 1.64, 'Nd': 2.01, 'Ne': 0.58, 'Ni': 1.24, 'Np': 1.90,
-#     'O':  0.66, 'Os': 1.44, 'P':  1.07, 'Pa': 2.00, 'Pb': 1.46,
-#     'Pd': 1.39, 'Pm': 1.99, 'Po': 1.40, 'Pr': 2.03, 'Pt': 1.36,
-#     'Pu': 1.87, 'Ra': 2.21, 'Rb': 2.20, 'Re': 1.51, 'Rh': 1.42,
-#     'Rn': 1.50, 'Ru': 1.46, 'S':  1.05, 'Sb': 1.39, 'Sc': 1.70,
-#     'Se': 1.20, 'Si': 1.11, 'Sm': 1.98, 'Sn': 1.39, 'Sr': 1.95,
-#     'Ta': 1.70, 'Tb': 1.94, 'Tc': 1.47, 'Te': 1.38, 'Th': 2.06,
-#     'Ti': 1.60, 'Tl': 1.45, 'Tm': 1.90, 'U':  1.96, 'V':  1.53,
-#     'W':  1.62, 'Xe': 1.40, 'Y':  1.90, 'Yb': 1.87, 'Zn': 1.22,
-#     'Zr': 1.75
-# }
 
 covalentradii = {
     'cordero': covalent_radii_cordero,
