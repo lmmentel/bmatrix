@@ -52,10 +52,14 @@ class Internals:
 
         subs (int) :
 
+        hlongscale (float) :
+            Scaling factor for the H atom for bonds between fragments
+
     """
 
     def __init__(self, atoms, radii, ascale, bscale, anglecrit,
-                 torsioncrit, fragcoord, relax, do_torsions, subst):
+                 torsioncrit, fragcoord, relax, do_torsions, subst,
+                 hlongscale=None):
 
         self.natoms = len(atoms)
         self.cell = atoms.get_cell() * ANGS2BOHR
@@ -73,6 +77,7 @@ class Internals:
         self.relax = relax
         self.do_torsions = do_torsions
         self.subst = subst
+        self.hlongscale = hlongscale
         self.trust = 0.15                    # criteria for acceptance of angle
 
         log.info('radii       : {}'.format(self.radii))
@@ -212,10 +217,10 @@ class Internals:
         if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord != 0:
             longradii = bscale * self.radii
 
-            #for i in range(len(longradii)):
-            #    if self.atomtypes[i] == 'H':
-            #        longradii[i] *= 2.0
-            #        log.info('scaling longradii, atomtypes[i] == "H"')
+            if self.hlongscale is not None:
+                for i, _ in enumerate(longradii):
+                    if self.atomcounter.keys()[i] == 'H':
+                        longradii[i] *= self.hlongscale
 
             longbonds = self.bond_fragments(fragments, substrate, longradii,
                                             katoms, 'R')
