@@ -8,7 +8,7 @@ import pickle
 from collections import Counter, OrderedDict
 
 import numpy as np
-from scipy.constants import angstrom, value
+
 
 from string import *
 from fpformat import *
@@ -20,7 +20,7 @@ import dealxyz
 import datastruct
 import inputparser
 
-ang2bohr = angstrom / value('atomic unit of length')
+from physconstants import ANGS2BOHR
 
 # c the smallest acceptable non-zero matrix element
 MYTINY = 1e-6
@@ -50,7 +50,7 @@ def write_internals(internals, fname):
 
 def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
                   anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
-                  cov_rad='default'):
+                  radii='default'):
     '''
     Calculate the internal coordinates and optionally the B matrix
     for the ``atoms`` object
@@ -63,22 +63,20 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
             numpy.array
     '''
 
-    symbols = np.array(atoms.get_chemical_symbols())
-    cartesian = atoms.get_positions() * ang2bohr
-    fractional = atoms.get_scaled_positions()
+    cartesian = atoms.get_positions() * ANGS2BOHR
 
     # set frequently used variables
     natoms = atoms.get_number_of_atoms()
     ndof = 3 * natoms
-    counts = OrderedCounter(symbols)
+    counts = OrderedCounter(atoms.get_chemical_symbols())
     atomtypes = [s for s in counts.keys()]
     atomcounts = counts.values()
 
     # convert and assign the cell and cartesian coordiantes
-    cell = atoms.get_cell() * ang2bohr
+    cell = atoms.get_cell() * ANGS2BOHR
     cell_inv = np.linalg.inv(cell)
 
-    cov_radii = datastruct.get_covalent_radii(atomtypes, source=cov_rad)
+    cov_radii = datastruct.get_covalent_radii(atomtypes, source=radii)
 
     # arguments that are normally set through arguments, here set by hand
     relax = False
@@ -93,11 +91,6 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
             primcoords[i].value = deal.internals[i]
         print('Internal coordinates were read from the file: internals.pkl')
     else:
-#        intrn = intcoord.Internals(cartesian, fractional, cell, symbols,
-#                                   cov_radii, ascale, bscale,
-#                                   anglecrit, torsioncrit, fragcoord,
-#                                   relax, torsions, subst)
-
         intrn = intcoord.Internals(atoms, cov_radii, ascale, bscale,
                                    anglecrit, torsioncrit, fragcoord,
                                    relax, torsions, subst)

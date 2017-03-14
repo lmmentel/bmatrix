@@ -5,12 +5,9 @@ import logging
 from collections import Counter, OrderedDict
 from math import *
 import numpy as np
-from scipy.constants import angstrom, value
 
 import datastruct
-from physconstants import physical_constants as pC
-
-ang2bohr = angstrom / value('atomic unit of length')
+from physconstants import ANGS2BOHR
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -75,14 +72,14 @@ class Internals:
                  torsioncrit, fragcoord, relax, tors, subst):
 
         self.natoms = len(atoms)
-        self.cell = atoms.get_cell() * ang2bohr
+        self.cell = atoms.get_cell() * ANGS2BOHR
         self.fractional = atoms.get_scaled_positions()
-        self.cartesian = atoms.get_positions() * ang2bohr
+        self.cartesian = atoms.get_positions() * ANGS2BOHR
         self.symbols = atoms.get_chemical_symbols()
 
         self.atomcounter = OrderedCounter(self.symbols)
         self.radii = radii
-        self.ascale = ascale / pC['AU2A']
+        self.ascale = ascale
         self.bscale = bscale
         self.anglecrit = anglecrit
         self.torsioncrit = torsioncrit
