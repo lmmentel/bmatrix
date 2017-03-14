@@ -48,9 +48,19 @@ def write_internals(internals, fname):
         pickle.dump(internals, fpkl)
 
 
-def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
+def internals_to_array(internals):
+    '''
+    Convert as list of ``datastruct.Complextype`` into numpy record
+    array with just the tag and value of the coordinate.
+    '''
+
+    return np.array([(i.tag, i.value) for i in internals],
+                    dtype=[('type', 'S4'), ('value', np.float32)])
+
+
+def get_internals(atoms, ascale=1.0, bscale=2.0,
                   anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
-                  radii='default'):
+                  radii='default', verbose=False):
     '''
     Calculate the internal coordinates and optionally the B matrix
     for the ``atoms`` object
@@ -63,67 +73,70 @@ def get_internals(atoms, return_bmatrix=False, ascale=1.0, bscale=2.0,
             numpy.array
     '''
 
-    cartesian = atoms.get_positions() * ANGS2BOHR
-
-    # set frequently used variables
-    natoms = atoms.get_number_of_atoms()
-    ndof = 3 * natoms
     counts = OrderedCounter(atoms.get_chemical_symbols())
     atomtypes = [s for s in counts.keys()]
-    atomcounts = counts.values()
-
-    # convert and assign the cell and cartesian coordiantes
-    cell = atoms.get_cell() * ANGS2BOHR
-    cell_inv = np.linalg.inv(cell)
 
     cov_radii = datastruct.get_covalent_radii(atomtypes, source=radii)
 
     # arguments that are normally set through arguments, here set by hand
     relax = False
     subst = 100
-    coordinates = 'cartesian'
 
-    if os.path.exists('internals.pkl'):
-        primcoords = read_internals('internals.pkl')
+    intrn = intcoord.Internals(atoms, cov_radii, ascale, bscale,
+                               anglecrit, torsioncrit, fragcoord,
+                               relax, torsions, subst)
 
-        deal = dealxyz.Dealxyz(cartesian, primcoords, cell)
-        for i in range(len(primcoords)):
-            primcoords[i].value = deal.internals[i]
-        print('Internal coordinates were read from the file: internals.pkl')
+    primcoords = intrn.internalcoords
+    write_internals(primcoords, 'internals.pkl')
+    if verbose:
+        print('Internal coordinates saved to: internals.pkl')
+
+    return primcoords
+
+
+def get_bmatrix(atoms, internals, coordinates='cartesian'):
+    '''
+    Calculate the B matrix
+    '''
+
+    relax = False
+
+    natoms = atoms.get_number_of_atoms()
+    ndof = 3 * natoms
+    cartesian = atoms.get_positions() * ANGS2BOHR
+    # convert and assign the cell and cartesian coordiantes
+    cell = atoms.get_cell() * ANGS2BOHR
+    cell_inv = np.linalg.inv(cell)
+
+    # compute the Bmatrix (wrt. fractional coordinates!)
+    b = bmatrix.Bmatrix(cartesian, internals, natoms, cell, relax)
+    Bmat = b.Bmatrix
+
+    if relax:
+        transmat = np.zeros((ndof + 9, ndof + 9), dtype=float)
+        for i in range(ndof + 9):
+            transmat[i, i] = 1.0
+        transmat[0: ndof, 0: ndof] = np.kron(np.eye(natoms), cell_inv.T)
     else:
-        intrn = intcoord.Internals(atoms, cov_radii, ascale, bscale,
-                                   anglecrit, torsioncrit, fragcoord,
-                                   relax, torsions, subst)
+        transmat = np.kron(np.eye(natoms), cell_inv.T)
 
-        primcoords = intrn.internalcoords
-        write_internals(primcoords, 'internals.pkl')
-        print('Internal coordinates were newly generated, save to: internals.pkl')
+    Bmat_c2 = np.dot(Bmat, transmat)
 
-    internals = np.array([(p.tag, p.value) for p in primcoords],
-                         dtype=[('type', 'S4'), ('value', np.float32)])
+    if coordinates == 'cartesian':
+        Bmat = Bmat_c2
 
-    if return_bmatrix:
+    return Bmat
 
-        # now compute the Bmatrix (wrt. fractional coordinates!)
-        b = bmatrix.Bmatrix(cartesian, primcoords, natoms, cell, relax)
-        Bmat = b.Bmatrix
 
-        if relax:
-            transmat = np.zeros((ndof + 9, ndof + 9), dtype=float)
-            for i in range(ndof + 9):
-                transmat[i, i] = 1.0
-            transmat[0: ndof, 0: ndof] = np.kron(np.eye(natoms), cell_inv.T)
-        else:
-            transmat = np.kron(np.eye(natoms), cell_inv.T)
+def recalculate_internals(atoms, internals):
+    '''
+    Recalculate internal coordinates from current cartesian coordinates
+    and previously determined bond, angles and torsions.
+    '''
 
-        Bmat_c2 = np.dot(Bmat, transmat)
-
-        if coordinates == 'cartesian':
-            Bmat = Bmat_c2
-
-        return internals, Bmat
-    else:
-        return internals
+    deal = dealxyz.Dealxyz(atoms, internals)
+    for i, _ in enumerate(internals):
+        internals[i].value = deal.internals[i]
 
 
 def main():

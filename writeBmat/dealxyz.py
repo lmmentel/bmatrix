@@ -1,28 +1,36 @@
 
 from math import *
-
 import numpy as np
+
+from physconstants import ANGS2BOHR
 
 
 class Dealxyz:
     """
-    from cartesians and given reciept (intwhat, intwhere) and
+    From cartesians and given reciept (intwhat, intwhere) and
     lattice vectors (cell) calculates values of internal
     coordinates
 
     Args:
-        cartesian (array_like) :
-            Cartesian coordinates (N x 3)
+        atoms (ase.Atoms) :
+            Atoms object from ASE package
+
         coords () :
             Internal coordinates
+
         cell (array_like) :
             Lattice vectors in atomic units (3 x 3)
+
     """
 
-    def __init__(self, cartesian, coords, cell):
+    def __init__(self, atoms, coords):
 
-        self.cartesian = cartesian
-        self.cell = cell
+        self.natoms = len(atoms)
+        self.cell = atoms.get_cell() * ANGS2BOHR
+        self.fractional = atoms.get_scaled_positions()
+        self.cartesian = atoms.get_positions() * ANGS2BOHR
+        self.symbols = atoms.get_chemical_symbols()
+
         self.internals = []
 
         for i in range(len(coords)):
