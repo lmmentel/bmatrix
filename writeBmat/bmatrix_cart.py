@@ -1,11 +1,14 @@
+
 from math import *
-from mymath import *
-import various,datastruct
 import numpy as np
+
+from . import datastruct
+
 
 class bmatrix:
  """Jacobi matrix for x->q conversion
  """
+
  def __init__(self,cartesian,coords,numofatoms,lattmat,RELAX):
    #invlat=np.transpose(lattmat)
    #invlat=inverse(invlat)
@@ -84,7 +87,7 @@ class bmatrix:
    a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
    b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
    vector=a-b
-   dist=vector_size(vector)
+   dist=np.linalg.norm(vector)
    dl_c=(a-b)/dist
    #dl=np.dot(dl_c,np.transpose(lattmat))
    dl=dl_c
@@ -124,7 +127,7 @@ class bmatrix:
    c=cartesian[coord.what[2]]+np.dot(coord.where[2],lattmat)
 
    vector=a-(b+c)/2
-   m=(sum((vector)**2))**0.5 
+   m=(sum((vector)**2))**0.5
 
    vector=(b+c)-2*a
    vector=vector/m
@@ -177,8 +180,8 @@ class bmatrix:
    d=cartesian[coord.what[3]]+np.dot(coord.where[3],lattmat)
    vector1=a-b
    vector2=c-d
-   dist1=vector_size(vector1)
-   dist2=vector_size(vector2)
+   dist1=np.linalg.norm(vector1)
+   dist2=np.linalg.norm(vector2)
    tmp1=coord.what
    tmp2=coord.where
    coord_=coord
@@ -199,7 +202,7 @@ class bmatrix:
    a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
    b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
    vector=a-b
-   dist=vector_size(vector)
+   dist=np.linalg.norm(vector)
    BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
    BROW=-5*BROW/dist**2
    return BROW
@@ -210,7 +213,7 @@ class bmatrix:
    a=cartesian[coord.what[0]]+np.dot(coord.where[0],lattmat)
    b=cartesian[coord.what[1]]+np.dot(coord.where[1],lattmat)
    vector=a-b
-   dist=vector_size(vector)
+   dist=np.linalg.norm(vector)
    BROW=self.prepare_l(cartesian,coord,lattmat,invlat,BROW)
    BROW=-12000*BROW/dist**7
    return BROW
@@ -225,8 +228,8 @@ class bmatrix:
    diffav=a-v
    diffbv=b-v
 
-   d1=vector_size(diffav)
-   d2=vector_size(diffbv)
+   d1=np.linalg.norm(diffav)
+   d2=np.linalg.norm(diffbv)
    cosalpha=(sum(diffav*diffbv)/(d1*d2))
    alpha=acos(cosalpha)
 
@@ -234,7 +237,7 @@ class bmatrix:
    dala_c=-(diffbv/(d1*d2)-diffav*cosalpha/(d1**2))/sinalpha
    dalc_c=-(diffav/(d1*d2)-diffbv*cosalpha/(d2**2))/sinalpha
    dalb_c=-dala_c-dalc_c
-   
+
    #dala=np.dot(dala_c,np.transpose(lattmat))
    #dalb=np.dot(dalb_c,np.transpose(lattmat))
    #dalc=np.dot(dalc_c,np.transpose(lattmat))
@@ -248,7 +251,7 @@ class bmatrix:
      BROW[(coord.what[1])*3+i]=dalb[i]
      BROW[(coord.what[0])*3+i]+=dala[i]
      BROW[(coord.what[2])*3+i]+=dalc[i]
-     
+
      #if coord.what[0]==coord.what[2]:
      #  BROW[(coord.what[0])*3+i]=dala[i]+dalc[i]
      #else:
@@ -285,9 +288,9 @@ class bmatrix:
    r12=a-b
    r23=b-c
    r34=c-d
-   dr12=vector_size(r12)
-   dr23=vector_size(r23)
-   dr34=vector_size(r34)
+   dr12=np.linalg.norm(r12)
+   dr23=np.linalg.norm(r23)
+   dr34=np.linalg.norm(r34)
    cospsi2=sum((r12)*(r23))/(dr12*dr23)
    sinpsi2=sin(acos(cospsi2))
    cospsi3=sum((r23)*(r34))/(dr23*dr34)
@@ -295,8 +298,8 @@ class bmatrix:
    e12=r12/dr12   # unit vector r12
    e23=r23/dr23   # unit vector r23
    e34=r34/dr34   # unit vector r34
-   e12xe23=cross_product(e12,e23)
-   e23xe34=cross_product(e23,e34)
+   e12xe23=np.cross(e12,e23)
+   e23xe34=np.cross(e23,e34)
    st1_c=-e12xe23/(dr12*sinpsi2**2)
    st4_c=e23xe34/(dr34*sinpsi3**2)
    part1=(dr23+dr12*cospsi2)/(dr12*dr23*sinpsi2)
@@ -359,12 +362,12 @@ class bmatrix:
    vector1=b-a
    vector2=c-a
    vector3=d-a
-   
-   st2_c=cross_product(vector2,vector3)/6
-   st3_c=cross_product(vector3,vector1)/6
-   st4_c=cross_product(vector1,vector2)/6
+
+   st2_c=np.cross(vector2,vector3)/6
+   st3_c=np.cross(vector3,vector1)/6
+   st4_c=np.cross(vector1,vector2)/6
    st1_c=-(st2_c+st3_c+st4_c)
-   
+
    #volume must be positive - change sign if needed
    tv=sum(st4_c*vector3)
    if tv<0.:
@@ -372,7 +375,7 @@ class bmatrix:
      st2_c=-st2_c
      st3_c=-st3_c
      st4_c=-st4_c
- 
+
    #st1=np.dot(st1_c,np.transpose(lattmat))
    #st2=np.dot(st2_c,np.transpose(lattmat))
    #st3=np.dot(st3_c,np.transpose(lattmat))
@@ -418,7 +421,7 @@ class bmatrix:
    the lattice vector
    """
    a=coord.what[0]
-   dist=vector_size(lattmat[a])
+   dist=np.linalg.norm(lattmat[a])
    dl=lattmat[a]/dist
    if a==0:BROW[-9:-6]=dl
    if a==1:BROW[-6:-3]=dl
@@ -434,8 +437,8 @@ class bmatrix:
    b=coord.what[1]
    diffav=lattmat[a]
    diffbv=lattmat[b]
-   d1=vector_size(diffav)
-   d2=vector_size(diffbv)
+   d1=np.linalg.norm(diffav)
+   d2=np.linalg.norm(diffbv)
    cosalpha=(sum(diffav*diffbv)/(d1*d2))
    alpha=acos(cosalpha)
    sinalpha=sin(alpha)
@@ -465,51 +468,51 @@ class bmatrix:
    a=lattmat[ia]
    b=lattmat[ib]
    c=lattmat[ic]
-   
+
    aa=sum(a**2)
    ba=sum(b*a)
    bc=sum(b*c)
    ac=sum(a*c)
-   
+
    b1=2*a*bc-c*ba-b*ac
    b2=c*aa-a*ac
    b3=b*aa-a*ba
-   
-   axb=cross_product(a,b)
-   axc=cross_product(a,c)
-   
+
+   axb=np.cross(a,b)
+   axc=np.cross(a,c)
+
    naxb=sum(axb**2)**0.5
    naxc=sum(axc**2)**0.5
-   
+
    calpha=sum(axb*axc)/naxb/naxc
    alpha=acos(calpha)
    salpha=sin(alpha)
-   
+
    b1/=(naxb*naxc)
    b2/=(naxb*naxc)
    b3/=(naxb*naxc)
-   
+
    daxb_da=np.transpose(np.array([[0.,-b[2],b[1]],[b[2],0.,-b[0]],[-b[1],b[0],0.]]))
    daxb_da=np.dot(axb,daxb_da)/naxb
    c1=daxb_da*naxc*sum(axb*axc)/(naxb*naxc)**2
-   
+
    daxb_db=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
    daxb_db=np.dot(axb,daxb_db)/naxb
    c2=daxb_db*naxc*sum(axb*axc)/(naxb*naxc)**2
-   
+
    c3=np.zeros(3,dtype=float)
-   
+
    daxc_da=np.transpose(np.array([[0.,-c[2],c[1]],[c[2],0.,-c[0]],[-c[1],c[0],0.]]))
    daxc_da=np.dot(axc,daxc_da)/naxc
    d1=daxc_da*naxb*sum(axb*axc)/(naxb*naxc)**2
-   
+
    d2=np.zeros(3,dtype=float)
-   
+
    daxc_dc=np.transpose(np.array([[0.,a[2],-a[1]],[-a[2],0.,a[0]],[a[1],-a[0],0.]]))
    daxc_dc=np.dot(axc,daxc_dc)/naxc
    d3=daxc_dc*naxb*sum(axb*axc)/(naxb*naxc)**2
-   
-   
+
+
    ind1=-9
    ind2=-6
    if ia<2:
@@ -524,7 +527,7 @@ class bmatrix:
      BROW[ind1+3*ic:ind2+3*ic]=b3-c3-d3
    else:
      BROW[-3:]=b3-c3-d3
-   BROW/=-salpha 
+   BROW/=-salpha
    return BROW
 
  def prepare_lv(self,lattmat,BROW):
@@ -533,9 +536,9 @@ class bmatrix:
    l1=lattmat[0]
    l2=lattmat[1]
    l3=lattmat[2]
-   dl1=cross_product(l2,l3)
-   dl2=cross_product(l3,l1)
-   dl3=cross_product(l1,l2)
+   dl1=np.cross(l2,l3)
+   dl2=np.cross(l3,l1)
+   dl3=np.cross(l1,l2)
    BROW[-9:-6]=dl1
    BROW[-6:-3]=dl2
    BROW[-3:]=dl3
@@ -548,8 +551,8 @@ class bmatrix:
    """
    a=coord.what[0]
    b=coord.what[1]
-   dista=vector_size(lattmat[a])
-   distb=vector_size(lattmat[b])
+   dista=np.linalg.norm(lattmat[a])
+   distb=np.linalg.norm(lattmat[b])
    dla=lattmat[a]/(dista*distb)
    dlb=-lattmat[b]*(dista/distb**3)
    if a==0:BROW[-9:-6]=dla
@@ -647,14 +650,14 @@ class bmatrix:
 
  def calculate_le(self,a,b):
    vector=a-b
-   distance=vector_size(vector)
+   distance=np.linalg.norm(vector)
    return distance
 
  def calculate_an(self,a,v,b):
    diffav=a-v
    diffbv=b-v
-   d1=vector_size(diffav)
-   d2=vector_size(diffbv)
+   d1=np.linalg.norm(diffav)
+   d2=np.linalg.norm(diffbv)
    cosalpha=(sum(diffav*diffbv)/(d1*d2))
    alpha=acos(cosalpha)
    return alpha
@@ -663,16 +666,16 @@ class bmatrix:
    r12=a-b
    r23=b-c
    r34=c-d
-   dr12=vector_size(r12)
-   dr23=vector_size(r23)
-   dr34=vector_size(r34)
+   dr12=np.linalg.norm(r12)
+   dr23=np.linalg.norm(r23)
+   dr34=np.linalg.norm(r34)
    e12=r12/dr12   # unit vector r12
    e23=r23/dr23   # unit vector r23
    e34=r34/dr34   # unit vector r34
-   e12xe23=cross_product(e12,e23)
-   e23xe34=cross_product(e23,e34)
+   e12xe23=np.cross(e12,e23)
+   e23xe34=np.cross(e23,e34)
    #if e12xe23!=0 and e23xe34!=0:
-   fuck=sum(e12xe23*e23xe34)/(vector_size(e12xe23)*vector_size(e23xe34))
+   fuck=sum(e12xe23*e23xe34)/(np.linalg.norm(e12xe23)*np.linalg.norm(e23xe34))
    if fuck>1:fuck=1.0
    if fuck<-1: fuck=-1.0
    dangle=acos(fuck)
@@ -726,7 +729,7 @@ class bmatrix:
    return BROW
 
 
-   
+
  def prepare_sum(self,cartesian,coord,lattmat,invlat,BROW):
    #XROW=np.zeros(len(BROW),dtype=float)
    for i in range(len(coord.tag)):
@@ -742,7 +745,7 @@ class bmatrix:
        BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,0,XROW)
      if coord.tag[i]=='fY':
        BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,1,XROW)
-     if coord.tag[i]=='fZ': 
+     if coord.tag[i]=='fZ':
        BROW=BROW+coord.coefs[i]*self.prepare_fsing(tcoord,2,XROW)
      if coord.tag[i]=='R':
        BROW=BROW+coord.coefs[i]*self.prepare_l(cartesian,tcoord,lattmat,invlat,XROW)
@@ -752,7 +755,7 @@ class bmatrix:
        BROW=BROW+coord.coefs[i]*self.prepare_a(cartesian,tcoord,lattmat,invlat,XROW)
      if coord.tag[i]=='T':
        BROW=BROW+coord.coefs[i]*self.prepare_dh(cartesian,tcoord,lattmat,invlat,XROW)
-     if coord.tag[i]=='tV': 
+     if coord.tag[i]=='tV':
        BROW=BROW+coord.coefs[i]*self.prepare_tv(cartesian,tcoord,lattmat,invlat,XROW)
      if coord.tag[i]=='RatioR':
        #BROW=BROW+coord.coefs[i]*self.prepare_ratior(cartesian,tcoord,lattmat,invlat,BROW)
@@ -793,7 +796,7 @@ class bmatrix:
        a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
        b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
        vector=a-b
-       dist=vector_size(vector)
+       dist=np.linalg.norm(vector)
        complexcoord+=((coord.coefs[i]**2)*dist)
        BROW=BROW+(coord.coefs[i]**2)*dist*self.prepare_l(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
      if coord.tag[i]=='A':
@@ -802,8 +805,8 @@ class bmatrix:
        b=cartesian[tcoord.what[2]]+np.dot(tcoord.where[2],lattmat)
        diffav=a-v
        diffbv=b-v
-       d1=vector_size(diffav)
-       d2=vector_size(diffbv)
+       d1=np.linalg.norm(diffav)
+       d2=np.linalg.norm(diffbv)
        cosalpha=(sum(diffav*diffbv)/(d1*d2))
        alpha=acos(cosalpha)
        complexcoord+=((coord.coefs[i]**2)*alpha)
@@ -816,10 +819,10 @@ class bmatrix:
        vector1=a-b
        vector2=b-c
        vector3=c-d
-       cross1=cross_product(vector1,vector2)
-       cross2=cross_product(vector2,vector3)
-       cross1_size=vector_size(cross1)
-       cross2_size=vector_size(cross2)
+       cross1=np.cross(vector1,vector2)
+       cross2=np.cross(vector2,vector3)
+       cross1_size=np.linalg.norm(cross1)
+       cross2_size=np.linalg.norm(cross2)
        fuck=sum(cross1*cross2)/(cross1_size*cross2_size)
        if fuck>1: fuck=1.0
        if fuck<-1: fuck=-1.0
@@ -830,7 +833,7 @@ class bmatrix:
        invlat,np.zeros(len(BROW),dtype=float))
    BROW=BROW/complexcoord**(0.5)
    return BROW
- 
+
  def prepare_cnum(self,cartesian,coord,lattmat,invlat,BROW):
    for i in range(len(coord.tag)):
      if coord.tag[i]=='R':
@@ -839,13 +842,13 @@ class bmatrix:
          a=cartesian[tcoord.what[0]]+np.dot(tcoord.where[0],lattmat)
          b=cartesian[tcoord.what[1]]+np.dot(tcoord.where[1],lattmat)
          vector=a-b
-         dist=vector_size(vector)
+         dist=np.linalg.norm(vector)
          dummyA=dist/coord.coefs[i]
          if abs(dummyA-1.0)<1e-4: dummyA=1.0001
-         dummyC=1.0-dummyA**9 
+         dummyC=1.0-dummyA**9
          dummyD=1.0-dummyA**14
          BROW_=self.prepare_l(cartesian,tcoord,lattmat,invlat,np.zeros(len(BROW),dtype=float))
          BROW=BROW-9.0*BROW_*(dummyA**9.0/dist)/dummyD
          BROW=BROW+14.0*dummyC*BROW_*(dummyA**14.0/dist)/dummyD**2
-   return BROW 
- 
+   return BROW
+

@@ -2,10 +2,15 @@
 from __future__ import print_function, division
 
 import argparse
-import ConfigParser
 import os
+import sys
 
 import numpy as np
+
+if sys.version_info.major == 3:
+    import configparser as cp
+else:
+    import ConfigParser as cp
 
 
 def get_input_args():
@@ -198,7 +203,7 @@ def parse_args(parser):
 
     if os.path.exists(args.config):
 
-        config = ConfigParser.SafeConfigParser()
+        config = cp.SafeConfigParser()
         config.read(args.config)
         defaults = dict(config.items("default"))
 

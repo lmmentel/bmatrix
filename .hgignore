@@ -14,3 +14,4 @@ syntax: glob
 *.fdb_latexmk
 *.fls
 docs/build/**
+.cache/**

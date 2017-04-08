@@ -1,11 +1,33 @@
-from fpformat import *
+
+from __future__ import print_function
+
 import string
 import pickle
-import mymath
 
 import numpy as np
 
-from physconstants import physical_constants as pC
+from .physconstants import physical_constants as pC
+
+
+def cart_dir(lvect, carts):
+    """
+    Transforms cartesian coordinates to fractional
+    """
+
+    m = np.linalg.inv(lvect)
+    direct = np.dot(carts, m)
+    for i in range(len(direct)):
+        for j in range(3):
+            while direct[i][j] > 1:
+                direct[i][j] = direct[i][j] - 1
+            while direct[i][j] < 0:
+                direct[i][j] = direct[i][j] + 1
+    idirect = []
+    for i in range(len(direct)):
+        idirect.append(direct[i])
+
+    return idirect
+
 
 def write_whatwhere(coords,fname):
   wfile=open(fname,'w')
@@ -54,7 +76,7 @@ def read_whatwhere(fname):
     intwhere.append(delement)
   wfile.close()
   return inttags,intwhat,intwhere
-  
+
 def read_cwhatwhere(fname,crt,lattmat):
   """Reads definition of primitive
   coordinate, i.e., the orders
@@ -155,13 +177,13 @@ def read_cwhatwhere(fname,crt,lattmat):
   wfile.close()
   return inttags,intwhat,intwhere,intcoefs,intstat,complextype
 
-def write_poscar(filename, cartcoords1, lattmat_, inpt): 
+def write_poscar(filename, cartcoords1, lattmat_, inpt):
   cartcoords3 = np.array(cartcoords1).reshape(len(cartcoords1) / 3, 3)
-  fractcoords3=mymath.cart_dir(lattmat_,cartcoords3)
+  fractcoords3=cart_dir(lattmat_,cartcoords3)
   #fractcoords3=dot(cartcoords3,inverse(lattmat_))
   lattmat=lattmat_*pC['AU2A']
   #cartcoords3=cartcoords3*pC['AU2A']
-  
+
   kkk=open(filename,'w')
   kkk.write(inpt.comment+'\n')
   kkk.write(str(1.000)+'\n')
@@ -209,7 +231,7 @@ def write_store(internalvalues,name):
     toadd=toadd+chr(32)+str(internalvalues[i])
   store.write(toadd+'\n')
   store.close()
-  
+
 
 def write_pstore(coords,name):
   """Writes prim. internals to the end of
@@ -250,7 +272,7 @@ def read_constrained(cfile=''):
     except IOError:
       return cmodes
     else:
-      print 'FILE WITH CONSTRAINED fractional coordinates read in'
+      print('FILE WITH CONSTRAINED fractional coordinates read in')
   return cmodes
 
 def read_atoms(cfile='ATOMS'):
@@ -269,12 +291,12 @@ def write_matrix(matrix,cfile):
   ufile=open(cfile,'w')
   pickle.dump(matrix,ufile)
   ufile.close()
-  
+
 def write_maxstep(MAXSTEP,cfile):
   tfile=open(cfile,'w')
-  tfile.write(fix(MAXSTEP,10))
+  tfile.write('{0:15.10f}'.format(MAXSTEP))
   tfile.close()
-  
+
 def read_maxstep(cfile):
   tfile=open(cfile,'r')
   MAXSTEP=tfile.readline()
