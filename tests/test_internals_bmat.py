@@ -2,8 +2,8 @@
 import os
 import numpy as np
 import ase.io
-from writeBmat import (get_internals, recalculate_internals,
-                       internals_to_array, get_bmatrix)
+from writeBmat import (get_internals, recalculate_internals, get_bmatrix,
+                       complextype_to_dataframe)
 
 data = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
 
@@ -15,9 +15,9 @@ def test_methanol(tmpdir):
     atoms = ase.io.read(xyzpath)
 
     internals = get_internals(atoms)
-    intc = internals_to_array(internals)
+    intdf = complextype_to_dataframe(internals)
     refintc = np.load(os.path.join(data, 'meoh_internals.npy'))
-    assert np.allclose(intc['value'], refintc['value'])
+    assert np.allclose(intdf['value'].values, refintc['value'])
 
     bmat = get_bmatrix(atoms, internals)
     refbmat = np.load(os.path.join(data, 'meoh_bmatrix.npy'))
@@ -32,9 +32,9 @@ def test_hton(tmpdir):
     atoms = ase.io.read(xyzpath)
 
     internals = get_internals(atoms)
-    intc = internals_to_array(internals)
+    intdf = complextype_to_dataframe(internals)
     refintc = np.load(os.path.join(data, 'hton_internals.npy'))
-    assert np.allclose(intc['value'], refintc['value'])
+    assert np.allclose(intdf['value'].values, refintc['value'])
 
     bmat = get_bmatrix(atoms, internals)
     refbmat = np.load(os.path.join(data, 'hton_bmatrix.npy'))
@@ -49,9 +49,9 @@ def test_hafi_isobu(tmpdir):
     atoms = ase.io.read(xyzpath)
 
     internals = get_internals(atoms)
-    intc = internals_to_array(internals)
+    intdf = complextype_to_dataframe(internals)
     refintc = np.load(os.path.join(data, 'hafi-isobu_internals.npy'))
-    assert np.allclose(intc['value'], refintc['value'])
+    assert np.allclose(intdf['value'].values, refintc['value'])
 
     bmat = get_bmatrix(atoms, internals)
     refbmat = np.load(os.path.join(data, 'hafi-isobu_bmatrix.npy'))
@@ -67,6 +67,6 @@ def test_regenerate_internals(tmpdir):
     internals = get_internals(atoms)
 
     recalculate_internals(atoms, internals)
-    intc = internals_to_array(internals)
+    intdf = complextype_to_dataframe(internals)
     refintc = np.load(os.path.join(data, 'meoh_internals.npy'))
-    assert np.allclose(intc['value'], refintc['value'])
+    assert np.allclose(intdf['value'].values, refintc['value'])

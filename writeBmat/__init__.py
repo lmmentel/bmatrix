@@ -1,3 +1,4 @@
 
-from writeBmat import (get_internals, recalculate_internals, internals_to_array,
-                       get_bmatrix)
+from .intcoord import (get_internals, recalculate_internals,
+                       complextype_to_dataframe)
+from .bmatrix import get_bmatrix

@@ -6,7 +6,7 @@ import pickle
 
 import numpy as np
 
-from physconstants import physical_constants as pC
+from .physconstants import physical_constants as pC
 
 
 def cart_dir(lvect, carts):

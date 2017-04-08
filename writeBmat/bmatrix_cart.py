@@ -1,9 +1,8 @@
 
 from math import *
-
-import datastruct
-
 import numpy as np
+
+from . import datastruct
 
 
 class bmatrix:

@@ -1,7 +1,50 @@
 
 from math import *
-import datastruct
 import numpy as np
+
+from . import datastruct
+from .physconstants import ANGS2BOHR
+
+
+def get_bmatrix(atoms, internals, coordinates='cartesian'):
+    '''
+    Calculate the B matrix
+
+    Args:
+        atoms : ase.Atoms
+            Atoms must be sorted by species
+
+        internals (list) :
+            Internal coordinates as a list of ``Complextype`` objects
+    '''
+
+    relax = False
+
+    natoms = atoms.get_number_of_atoms()
+    ndof = 3 * natoms
+    cartesian = atoms.get_positions() * ANGS2BOHR
+    # convert and assign the cell and cartesian coordiantes
+    cell = atoms.get_cell() * ANGS2BOHR
+    cell_inv = np.linalg.inv(cell)
+
+    # compute the Bmatrix (wrt. fractional coordinates!)
+    b = Bmatrix(cartesian, internals, natoms, cell, relax)
+    Bmat = b.Bmatrix
+
+    if relax:
+        transmat = np.zeros((ndof + 9, ndof + 9), dtype=float)
+        for i in range(ndof + 9):
+            transmat[i, i] = 1.0
+        transmat[0: ndof, 0: ndof] = np.kron(np.eye(natoms), cell_inv.T)
+    else:
+        transmat = np.kron(np.eye(natoms), cell_inv.T)
+
+    Bmat_c2 = np.dot(Bmat, transmat)
+
+    if coordinates == 'cartesian':
+        Bmat = Bmat_c2
+
+    return Bmat
 
 
 class Bmatrix:

@@ -6,7 +6,7 @@ from math import *
 
 import numpy as np
 
-from physconstants import physical_constants as pC
+from .physconstants import physical_constants as pC
 
 class ParseException:
   "This exception is thrown when parsing-error occures."

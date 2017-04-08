@@ -6,7 +6,7 @@ from math import *
 import re
 import numpy as np
 
-from physconstants import physical_constants as pC
+from .physconstants import physical_constants as pC
 
 class ParseException:
   "This exception is thrown when parsing-error occures."
@@ -20,10 +20,10 @@ class TakeInput:
    self.comment="" # comment written at the beginning of POSCAR
    self.numofatoms=0 # total number of atoms in the system
    self.ntypes=0 # number of types
-   self.types=[] # number of atoms of each type 
+   self.types=[] # number of atoms of each type
    self.atomicFlags=[] # flags corresponding to different types
    self.atomicMass=[] # mass for each atomic type (amu)
-   self.scaling=1. 
+   self.scaling=1.
    self.lattmat=np.zeros((3,3), dtype=float) # lattice vectors (A or au)
    self.lattinv=np.zeros((3,3), dtype=float) # reciprocal lattice vectors
    self.volume=0. # cell volume
@@ -36,10 +36,10 @@ class TakeInput:
    #TODO: read Selective Dynamics!!!
    #TODO: check if NSW==1!!!
    #TODO: check if IBRION has a reasonable value!!!
- 
+
  def read(self,f):
    "Read data from the OUTCAR file."
-   f = open(f,"r") 
+   f = open(f,"r")
    task=0 #TODO now compute the cell volume, coords_c,.
    for line in f.readlines():
      if task==0:
@@ -55,7 +55,7 @@ class TakeInput:
 	 else:
 	   print("problem reading atomic flags!!!")
 	 continue
-       
+
        dummy=re.search("POMASS =",line)
        if dummy:
 	 k=dummy.end()
@@ -72,7 +72,7 @@ class TakeInput:
        dummy=re.search("POSCAR:",line)
        if dummy:
 	 k=dummy.end()
-	 self.comment=line[k+1:-1]	 
+	 self.comment=line[k+1:-1]
 	 continue
 
        dummy=re.search("ions per type =",line)
@@ -85,8 +85,8 @@ class TakeInput:
 	 self.ntypes=len(self.types)
 	 self.coords_d = np.zeros((self.numofatoms,3), dtype=float)
 	 self.gradients = np.zeros((self.numofatoms,3), dtype=float)
-	 task=1   
-	 continue 
+	 task=1
+	 continue
      if task==1:
        dummy=re.search("direct lattice vectors",line)
        if dummy:
@@ -114,7 +114,7 @@ class TakeInput:
        if len(line)==3:
 	 self.coords_d[task-6][0]=float(line[0])
          self.coords_d[task-6][1]=float(line[1])
-         self.coords_d[task-6][2]=float(line[2]) 
+         self.coords_d[task-6][2]=float(line[2])
        else:
 	 raise ParseException('problem reading atomic positions')
        task+=1
@@ -138,9 +138,9 @@ class TakeInput:
 	     self.stress[i]=float(line[i])
 	 else:
 	   raise ParseException('problem reading stress tensor')
-	 task+=1   
+	 task+=1
 	 continue
-     if task==self.numofatoms+8: 
+     if task==self.numofatoms+8:
        dummy=re.search("TOTAL-FORCE",line)
        if dummy:
 	 task+=1
@@ -164,8 +164,8 @@ class TakeInput:
          k=dummy.end()
          ene=line[k:].split()
          self.energy=float(ene[0])
-	 task+=1   
-	 continue 
+	 task+=1
+	 continue
    f.close()
    self.lattmat = np.array(self.lattmat)
    self.lattinv = np.linalg.inv(self.lattmat)
@@ -181,7 +181,7 @@ class TakeInput:
    self.energy /= pC['Hartree2eV']
    self.stress /= pC['Hartree2eV']
    self.gradients *= pC['AU2A']/pC['Hartree2eV']
- 
+
 #out=TakeInput()
 #out.read("OUTCAR")
 #print "out.numofatoms",out.numofatoms

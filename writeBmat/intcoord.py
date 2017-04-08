@@ -2,15 +2,111 @@
 from __future__ import print_function
 
 import logging
+import pickle
+from io import open
 from collections import Counter, OrderedDict
 from math import *
 import numpy as np
+import pandas as pd
 
-import datastruct
-from physconstants import ANGS2BOHR
+from . import datastruct
+from . import dealxyz
+from .physconstants import ANGS2BOHR
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+def get_internals(atoms, ascale=1.0, bscale=2.0,
+                  anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
+                  radii='default'):
+    '''
+    Calculate the internal coordinates and optionally the B matrix
+    for the ``atoms`` object
+
+    Args:
+        atoms (ase.Atoms) :
+            Atoms object
+
+        ascale (float) :
+            Scaling factor for the atomic radii, default is 1.0
+
+        bscale (float) :
+            Scaling factor, default is 2.0
+
+        anglecrit (float) :
+            Critical angle, default is 6
+
+        torsioncrit (float) :
+            Critical torsion, default is 4
+
+        fragcoord (int) :
+            default is 1
+
+        torsions (bool) :
+            If ``True`` torsions are calculated, default is True
+
+        radii (str) :
+            Name of the radii to use, default is `default`
+
+        asdf (bool) :
+            If ``True`` internals are returned as ``pandas.DataFrame``
+            otherwise a list of ``Complextype`` objects is retured
+    '''
+
+    counts = OrderedCounter(atoms.get_chemical_symbols())
+    atomtypes = [s for s in counts.keys()]
+
+    cov_radii = datastruct.get_covalent_radii(atomtypes, source=radii)
+
+    # arguments that are normally set through arguments, here set by hand
+    relax = False
+    subst = 100
+
+    intrn = Internals(atoms, cov_radii, ascale, bscale,
+                      anglecrit, torsioncrit, fragcoord,
+                      relax, torsions, subst)
+
+    primcoords = intrn.internalcoords
+    intrn.to_pickle('internals.pkl')
+
+    print('Internal coordinates saved to: internals.pkl')
+
+    return primcoords
+
+
+def recalculate_internals(atoms, internals):
+    '''
+    Recalculate internal coordinates from current cartesian coordinates
+    and previously determined bonds, angles and torsions.
+
+    Args:
+        atoms (ase.Atoms) :
+            Atoms object
+        internals (list) :
+            Internal coordinates as a list of ``Complextype`` objects
+    '''
+
+    deal = dealxyz.Dealxyz(atoms, internals)
+    for i, _ in enumerate(internals):
+        internals[i].value = deal.internals[i]
+
+
+def complextype_to_dataframe(internals):
+    'convert a list of internals into a pandas DataFrame'
+
+    df = pd.DataFrame(index=range(len(internals)),
+                      columns=['dtyp', 'tag', 'value', 'what', 'symbols',
+                               'where'])
+
+    df.loc[:, 'dtyp'] = [x.dtyp for x in internals]
+    df.loc[:, 'tag'] = [x.tag for x in internals]
+    df.loc[:, 'value'] = [x.value for x in internals]
+    df.loc[:, 'what'] = [x.what for x in internals]
+    df.loc[:, 'symbols'] = [x.whattags for x in internals]
+    df.loc[:, 'where'] = [x.where for x in internals]
+
+    return df
 
 
 class OrderedCounter(Counter, OrderedDict):
@@ -106,12 +202,12 @@ class Internals:
         log.info('short_radii: {}'.format(self.short_radii))
         log.info('long_radii: {}'.format(self.long_radii))
 
-        katoms = np.cumsum(self.atomcounter.values())
+        katoms = np.cumsum(list(self.atomcounter.values()))
+        log.info('katoms: {}'.format(katoms))
+
         if len(katoms) != len(self.radii):
             raise ValueError('len(katoms) != len(radii)'
                              ', {} != {}'.format(len(katoms), len(self.radii)))
-
-        log.info('katoms: {}'.format(katoms))
 
         self.set_criteria()
         self.pexcluded = [None, None, None]
@@ -888,3 +984,17 @@ class Internals:
                 indx = 3 * i + j
                 singles[indx] = cartusa[j]
         return singles
+
+    @staticmethod
+    def read_pickle(fname):
+        'Read internal coordinates from a file'
+
+        with open(fname, 'rb') as fpkl:
+            internals = pickle.load(fpkl)
+        return internals
+
+    def to_pickle(self, fname):
+        'Write internal coordinates to a file'
+
+        with open(fname, 'wb') as fpkl:
+            pickle.dump(self.internalcoords, fpkl)
