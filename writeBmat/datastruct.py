@@ -9,7 +9,7 @@ class Complextype:
     Args:
 
         dtyp (str) :
-            Type
+            Type, sum/norm
 
         coeffs (list of int) :
             Coefficients
@@ -35,7 +35,7 @@ class Complextype:
 
     def __init__(self, dtyp, coefs, tag, what, whattags, where, value, status):
 
-        self.dtyp = dtyp           # sum/norm
+        self.dtyp = dtyp
         self.coefs = coefs
         self.tag = tag
         self.what = what
@@ -56,25 +56,7 @@ class Complextype:
             'where={}'.format(', '.join([str(i) for i in self.where]))]) + ')>'
 
 
-class Linesearch:
-
-    def __init__(self):
-
-        self.a = [None]         # braketing left
-        self.b = [None]         # minimum
-        self.c = [None]         # braketing right
-        self.direction = None
-        self.energies = [None]
-        self.steps = [None]
-        self.oldgrad = None                 # gradients
-        self.newgrad = None
-        self.oldpos = None                  # positions
-        self.nexpos = None
-        self.status = 'u'
-        self.cg = None
-
-
-covalent_radii_default = {
+radii_default = {
     'Ac': 3.9306303409522827,
     'Ag': 3.3826097645695126,
     'Al': 2.9290754944596338,
@@ -175,7 +157,7 @@ covalent_radii_default = {
     'Zr': 3.3259179808057775,
 }
 
-# Covalent radii from Cordero in Angstrom
+# Covalent radii from Cordero in atomic units
 covalent_radii_cordero = {
     'Ac': 4.06291116973433,
     'Ag': 2.7401028819138507,
@@ -278,7 +260,7 @@ covalent_radii_cordero = {
 
 covalentradii = {
     'cordero': covalent_radii_cordero,
-    'default': covalent_radii_default,
+    'default': radii_default,
 }
 
 
@@ -290,6 +272,7 @@ def get_covalent_radii(symbols, source='default'):
     Args:
         symbols : list
             List of chemical symbols
+
         source : str
             Name of the source of the covalent radii data
     '''
@@ -299,16 +282,3 @@ def get_covalent_radii(symbols, source='default'):
         warnings.warn("<{}> not found using source='default'".format(source))
 
     return [covalentradii[source][s] for s in symbols]
-
-
-mendelejev = {
-    'ru': 4, 're': 5, 'ra': 6, 'rb': 4, 'rn': 5, 'rh': 4, 'be': 1, 'ba': 5, \
-    'bi': 5, 'bk': 6, 'br': 3, 'h': 0, 'p': 2, 'os': 5, 'hg': 5, 'ge': 3, 'gd': 5, 'ga': 3, \
-    'pr': 5, 'pt': 5, 'pu': 6, 'c': 1, 'pb': 5, 'pa': 6, 'pd': 4, 'cd': 4, 'po': 5, 'pm': 5, \
-    'ho': 5, 'hf': 5, 'k': 3, 'he': 0, 'mg': 2, 'mo': 4, 'mn': 3, 'o': 1, 's': 2, 'w': 5, \
-    'zn': 3, 'eu': 5, 'zr': 4, 'er': 5, 'ni': 3, 'na': 2, 'nb': 4, 'nd': 5, 'ne': 1, 'np': 6, \
-    'fr': 6, 'fe': 3, 'b': 1, 'f': 1, 'sr': 4, 'n': 1, 'kr': 3, 'si': 2, 'sn': 4, 'sm': 5, \
-    'v': 3, 'sc': 3, 'sb': 4, 'se': 3, 'co': 3, 'cm': 6, 'cl': 2, 'ca': 3, 'cf': 6, 'ce': 5, \
-    'xe': 4, 'lu': 5, 'cs': 5, 'cr': 3, 'cu': 3, 'la': 5, 'li': 1, 'tl': 5, 'tm': 5, 'th': 6, \
-    'ti': 3, 'te': 4, 'tb': 5, 'tc': 4, 'ta': 5, 'yb': 5, 'dy': 5, 'i': 4, 'u': 6, 'y': 4, \
-    'ac': 6, 'ag': 4, 'ir': 5, 'am': 6, 'al': 2, 'as': 3, 'ar': 2, 'au': 5, 'at': 5, 'in': 4}
