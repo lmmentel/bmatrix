@@ -23,7 +23,7 @@ setup(
     name='writeBmat',
     packages=['writeBmat'],
     url='https://bitbucket.org/lukaszmentel/writebmat/',
-    version='0.1.0',
+    version='1.0.0',
     install_requires=['numpy', 'scipy'],
     classifiers=[
         'Environment :: Console',
