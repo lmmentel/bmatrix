@@ -19,7 +19,7 @@ log.addHandler(logging.NullHandler())
 
 def get_internals(atoms, ascale=1.0, bscale=2.0,
                   anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
-                  radii='default'):
+                  radii='default', outformat=None):
     '''
     Calculate the internal coordinates and optionally the B matrix
     for the ``atoms`` object
@@ -67,12 +67,14 @@ def get_internals(atoms, ascale=1.0, bscale=2.0,
                       anglecrit, torsioncrit, fragcoord,
                       relax, torsions, subst)
 
-    primcoords = intrn.internalcoords
-    intrn.to_pickle('internals.pkl')
-
-    print('Internal coordinates saved to: internals.pkl')
-
-    return primcoords
+    if outformat is None:
+        return intrn.internalcoords
+    elif outformat == 'numpy':
+        return intrn.to_recarray()
+    elif outformat == 'pandas':
+        return complextype_to_dataframe(intrn.internalcoords)
+    else:
+        raise ValueError('Uknown output format: ', outformat)
 
 
 def recalculate_internals(atoms, internals):
@@ -243,16 +245,16 @@ class Internals:
         bonds = self.bond_lengths(intrawhat, intrawhere,
                                   allcartesian, allwhat, allwhere, katoms, 'R')
 
-        log.info('bonds:')
+        log.debug('bonds:')
         for i, b in enumerate(bonds):
             log.info('{}: {}'.format(i, b))
 
         fragments, substrate = self.frac_struct(bonds, self.subst)
 
         for i, f in enumerate(fragments):
-            log.info('fragment {}: {}'.format(i, f))
+            log.debug('fragment {}: {}'.format(i, f))
 
-        log.info('substrate: {}'.format(substrate))
+        log.debug('substrate: {}'.format(substrate))
 
         if len(bonds) == 0:
             print('no bonds detected, are you sure about the at. rad.?')
@@ -917,7 +919,7 @@ class Internals:
         fractions = self.find_fragments(fract)
         substrate = []
         if len(fractions) == 1:
-            print('ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.')
+            log.info('ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.')
             # identify substrate
             fract = []
             for i in range(len(self.topology_matrix)):
@@ -937,10 +939,10 @@ class Internals:
                                 if self.topology_matrix_adds[i, j] == 1:
                                     fract[ii].append(j)
                 fractions = self.find_fragments(fract)
-                print('SUBSTRATE ATOMS DETECTED: ', substrate)
-                print('INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED')
+                log.info('SUBSTRATE ATOMS DETECTED: ', substrate)
+                log.info('INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED')
         else:
-            print(len(fractions), 'FRAGMENTS DETECTED')
+            log.info(len(fractions), 'FRAGMENTS DETECTED')
         return fractions, substrate
 
     def find_fragments(self, fract):
@@ -998,3 +1000,12 @@ class Internals:
 
         with open(fname, 'wb') as fpkl:
             pickle.dump(self.internalcoords, fpkl)
+
+    def to_recarray(self):
+        '''
+        Convert as list of ``datastruct.Complextype`` into numpy record
+        array with just the tag and value of the coordinate.
+        '''
+
+        return np.array([(i.tag, i.value) for i in self.internalcoords],
+                        dtype=[('type', 'S4'), ('value', np.float32)])
