@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "writebmat"
+name = "bmatrix"
 version = "1.0.1"
-description = "his package contains tools for generating internal coordiantes and the"
-authors = ["Lukasz Mentel <lmmentel@gmail.com>"]
+description = "Package with tools for generating internal coordiantes and the corresponding B matrix for molecules and for periodic systems."
+authors = ["Lukasz Mentel <lmmentel@gmail.com>", "Tomas Bucko"]
 license = "GNU"
 
 [tool.poetry.dependencies]
@@ -17,6 +17,8 @@ pylint = "^2.5.3"
 pytest = "^3.0"
 pytest-cov = "^2.4"
 pytest-sugar = "^0.9.4"
+ase = "^3.22.0"
+pandas = "^1.3.1"
 
 
 [tool.black]
