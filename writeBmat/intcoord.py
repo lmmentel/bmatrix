@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 import logging
@@ -17,10 +16,18 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
-def get_internals(atoms, ascale=1.0, bscale=2.0,
-                  anglecrit=6, torsioncrit=4, fragcoord=1, torsions=True,
-                  radii='default', outformat=None):
-    '''
+def get_internals(
+    atoms,
+    ascale=1.0,
+    bscale=2.0,
+    anglecrit=6,
+    torsioncrit=4,
+    fragcoord=1,
+    torsions=True,
+    radii="default",
+    outformat=None,
+):
+    """
     Calculate the internal coordinates and optionally the B matrix
     for the ``atoms`` object
 
@@ -52,7 +59,7 @@ def get_internals(atoms, ascale=1.0, bscale=2.0,
         asdf (bool) :
             If ``True`` internals are returned as ``pandas.DataFrame``
             otherwise a list of ``Complextype`` objects is retured
-    '''
+    """
 
     counts = OrderedCounter(atoms.get_chemical_symbols())
     atomtypes = [s for s in counts.keys()]
@@ -63,22 +70,31 @@ def get_internals(atoms, ascale=1.0, bscale=2.0,
     relax = False
     subst = 100
 
-    intrn = Internals(atoms, cov_radii, ascale, bscale,
-                      anglecrit, torsioncrit, fragcoord,
-                      relax, torsions, subst)
+    intrn = Internals(
+        atoms,
+        cov_radii,
+        ascale,
+        bscale,
+        anglecrit,
+        torsioncrit,
+        fragcoord,
+        relax,
+        torsions,
+        subst,
+    )
 
     if outformat is None:
         return intrn.internalcoords
-    elif outformat == 'numpy':
+    elif outformat == "numpy":
         return intrn.to_recarray()
-    elif outformat == 'pandas':
+    elif outformat == "pandas":
         return complextype_to_dataframe(intrn.internalcoords)
     else:
-        raise ValueError('Uknown output format: ', outformat)
+        raise ValueError("Uknown output format: ", outformat)
 
 
 def recalculate_internals(atoms, internals):
-    '''
+    """
     Recalculate internal coordinates from current cartesian coordinates
     and previously determined bonds, angles and torsions.
 
@@ -87,7 +103,7 @@ def recalculate_internals(atoms, internals):
             Atoms object
         internals (list) :
             Internal coordinates as a list of ``Complextype`` objects
-    '''
+    """
 
     deal = dealxyz.Dealxyz(atoms, internals)
     for i, _ in enumerate(internals):
@@ -95,18 +111,19 @@ def recalculate_internals(atoms, internals):
 
 
 def complextype_to_dataframe(internals):
-    'convert a list of internals into a pandas DataFrame'
+    "convert a list of internals into a pandas DataFrame"
 
-    df = pd.DataFrame(index=range(len(internals)),
-                      columns=['dtyp', 'tag', 'value', 'what', 'symbols',
-                               'where'])
+    df = pd.DataFrame(
+        index=range(len(internals)),
+        columns=["dtyp", "tag", "value", "what", "symbols", "where"],
+    )
 
-    df.loc[:, 'dtyp'] = [x.dtyp for x in internals]
-    df.loc[:, 'tag'] = [x.tag for x in internals]
-    df.loc[:, 'value'] = [x.value for x in internals]
-    df.loc[:, 'what'] = [x.what for x in internals]
-    df.loc[:, 'symbols'] = [x.whattags for x in internals]
-    df.loc[:, 'where'] = [x.where for x in internals]
+    df.loc[:, "dtyp"] = [x.dtyp for x in internals]
+    df.loc[:, "tag"] = [x.tag for x in internals]
+    df.loc[:, "value"] = [x.value for x in internals]
+    df.loc[:, "what"] = [x.what for x in internals]
+    df.loc[:, "symbols"] = [x.whattags for x in internals]
+    df.loc[:, "where"] = [x.where for x in internals]
 
     return df
 
@@ -155,9 +172,20 @@ class Internals:
 
     """
 
-    def __init__(self, atoms, radii, ascale, bscale, anglecrit,
-                 torsioncrit, fragcoord, relax, do_torsions, subst,
-                 hlongscale=None):
+    def __init__(
+        self,
+        atoms,
+        radii,
+        ascale,
+        bscale,
+        anglecrit,
+        torsioncrit,
+        fragcoord,
+        relax,
+        do_torsions,
+        subst,
+        hlongscale=None,
+    ):
 
         self.natoms = len(atoms)
         self.cell = atoms.get_cell() * ANGS2BOHR
@@ -176,40 +204,42 @@ class Internals:
         self.do_torsions = do_torsions
         self.subst = subst
         self.hlongscale = hlongscale
-        self.trust = 0.15                    # criteria for acceptance of angle
+        self.trust = 0.15  # criteria for acceptance of angle
 
-        log.info('radii       : {}'.format(self.radii))
-        log.info('ascale      : {}'.format(self.ascale))
-        log.info('bscale      : {}'.format(self.bscale))
-        log.info('anglecrit   : {}'.format(self.anglecrit))
-        log.info('torsioncrit : {}'.format(self.torsioncrit))
-        log.info('fragcoord   : {}'.format(self.fragcoord))
-        log.info('relax       : {}'.format(self.relax))
-        log.info('do_torsions : {}'.format(self.do_torsions))
-        log.info('subst       : {}'.format(self.subst))
-        log.info('natoms      : {}'.format(self.natoms))
-        log.info('symbols     : {}'.format(self.symbols))
-        log.debug('cell       : ')
+        log.info("radii       : {}".format(self.radii))
+        log.info("ascale      : {}".format(self.ascale))
+        log.info("bscale      : {}".format(self.bscale))
+        log.info("anglecrit   : {}".format(self.anglecrit))
+        log.info("torsioncrit : {}".format(self.torsioncrit))
+        log.info("fragcoord   : {}".format(self.fragcoord))
+        log.info("relax       : {}".format(self.relax))
+        log.info("do_torsions : {}".format(self.do_torsions))
+        log.info("subst       : {}".format(self.subst))
+        log.info("natoms      : {}".format(self.natoms))
+        log.info("symbols     : {}".format(self.symbols))
+        log.debug("cell       : ")
         log.debug(self.cell)
-        log.debug('fractional : ')
+        log.debug("fractional : ")
         log.debug(self.fractional)
-        log.debug('cartesian  : ')
+        log.debug("cartesian  : ")
         log.debug(self.cartesian)
 
         self.radii = self.ascale * np.array(self.radii)
-        self.short_radii = 0.2 * np.array(self.radii)    # minimal lengths
-        self.long_radii = np.array(self.radii)           # upper limit for bond length
+        self.short_radii = 0.2 * np.array(self.radii)  # minimal lengths
+        self.long_radii = np.array(self.radii)  # upper limit for bond length
 
-        log.info('radii: {}'.format(self.radii))
-        log.info('short_radii: {}'.format(self.short_radii))
-        log.info('long_radii: {}'.format(self.long_radii))
+        log.info("radii: {}".format(self.radii))
+        log.info("short_radii: {}".format(self.short_radii))
+        log.info("long_radii: {}".format(self.long_radii))
 
         katoms = np.cumsum(list(self.atomcounter.values()))
-        log.info('katoms: {}'.format(katoms))
+        log.info("katoms: {}".format(katoms))
 
         if len(katoms) != len(self.radii):
-            raise ValueError('len(katoms) != len(radii)'
-                             ', {} != {}'.format(len(katoms), len(self.radii)))
+            raise ValueError(
+                "len(katoms) != len(radii)"
+                ", {} != {}".format(len(katoms), len(self.radii))
+            )
 
         self.set_criteria()
         self.pexcluded = [None, None, None]
@@ -226,46 +256,50 @@ class Internals:
         interfractional, interwhat, interwhere = self.inter_search()
 
         if len(interfractional) > 0:
-            allfractional = np.zeros((len(self.fractional) +
-                                      len(interfractional), 3), dtype=float)
-            allfractional[:len(self.fractional)] = self.fractional
-            allfractional[len(self.fractional):] = interfractional
+            allfractional = np.zeros(
+                (len(self.fractional) + len(interfractional), 3), dtype=float
+            )
+            allfractional[: len(self.fractional)] = self.fractional
+            allfractional[len(self.fractional) :] = interfractional
         else:
             allfractional = self.fractional
-        #allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
-        #allwhat[:len(intrawhat)]=intrawhat
-        #allwhat[len(intrawhat):]=interwhat
+        # allwhat=np.zeros((len(intrawhat)+len(interwhat)),Int)
+        # allwhat[:len(intrawhat)]=intrawhat
+        # allwhat[len(intrawhat):]=interwhat
         allwhat = intrawhat + interwhat
-        #allwhere=np.zeros((len(intrawhere)+len(interwhere)),Int)
-        #allwhere[:len(intrawhere)]=intrawhere
-        #allwhere[len(intrawhere):]=interwhere
+        # allwhere=np.zeros((len(intrawhere)+len(interwhere)),Int)
+        # allwhere[:len(intrawhere)]=intrawhere
+        # allwhere[len(intrawhere):]=interwhere
         allwhere = intrawhere + interwhere
-        allcartesian = self.dirto_cart(allfractional)  # modified cell converted to cart coords.
+        allcartesian = self.dirto_cart(
+            allfractional
+        )  # modified cell converted to cart coords.
 
-        bonds = self.bond_lengths(intrawhat, intrawhere,
-                                  allcartesian, allwhat, allwhere, katoms, 'R')
+        bonds = self.bond_lengths(
+            intrawhat, intrawhere, allcartesian, allwhat, allwhere, katoms, "R"
+        )
 
-        log.debug('bonds:')
+        log.debug("bonds:")
         for i, b in enumerate(bonds):
-            log.info('{}: {}'.format(i, b))
+            log.info("{}: {}".format(i, b))
 
         fragments, substrate = self.frac_struct(bonds, self.subst)
 
         for i, f in enumerate(fragments):
-            log.debug('fragment {}: {}'.format(i, f))
+            log.debug("fragment {}: {}".format(i, f))
 
-        log.debug('substrate: {}'.format(substrate))
+        log.debug("substrate: {}".format(substrate))
 
         if len(bonds) == 0:
-            print('no bonds detected, are you sure about the at. rad.?')
+            print("no bonds detected, are you sure about the at. rad.?")
 
-        angles, iangwhat, iangwhere = self.set_angles(bonds, 'A')
+        angles, iangwhat, iangwhere = self.set_angles(bonds, "A")
 
         self.internalcoords = []
         self.longinternalcoords = []
 
         if self.do_torsions:
-            torsions = self.set_dihedrals(iangwhat, iangwhere, 'T')
+            torsions = self.set_dihedrals(iangwhat, iangwhere, "T")
             self.internalcoords = bonds + angles + torsions
         else:
             self.internalcoords = bonds + angles
@@ -278,38 +312,80 @@ class Internals:
             singles = []
             swhere = [0, 0, 0]
             for i in range(len(self.cartesian)):
-                singles.append(datastruct.Complextype('simple', [1], 'X', [i],
-                                                      [self.symbols[i]],
-                                                      [swhere],
-                                                      self.cartesian[i][0],
-                                                      'free'))
-                singles.append(datastruct.Complextype('simple', [1], 'Y', [i],
-                                                      [self.symbols[i]],
-                                                      [swhere],
-                                                      self.cartesian[i][1],
-                                                      'free'))
-                singles.append(datastruct.Complextype('simple', [1], 'Z', [i],
-                                                      [self.symbols[i]],
-                                                      [swhere],
-                                                      self.cartesian[i][2],
-                                                      'free'))
+                singles.append(
+                    datastruct.Complextype(
+                        "simple",
+                        [1],
+                        "X",
+                        [i],
+                        [self.symbols[i]],
+                        [swhere],
+                        self.cartesian[i][0],
+                        "free",
+                    )
+                )
+                singles.append(
+                    datastruct.Complextype(
+                        "simple",
+                        [1],
+                        "Y",
+                        [i],
+                        [self.symbols[i]],
+                        [swhere],
+                        self.cartesian[i][1],
+                        "free",
+                    )
+                )
+                singles.append(
+                    datastruct.Complextype(
+                        "simple",
+                        [1],
+                        "Z",
+                        [i],
+                        [self.symbols[i]],
+                        [swhere],
+                        self.cartesian[i][2],
+                        "free",
+                    )
+                )
             if self.relax:
                 for i in range(3):
-                    singles.append(datastruct.Complextype('simple', [1], 'hX',
-                                                          [i], [None],
-                                                          [[0, 0, 0]],
-                                                          self.cell[i][0],
-                                                          'free'))
-                    singles.append(datastruct.Complextype('simple', [1], 'hY',
-                                                          [i], [None],
-                                                          [[0, 0, 0]],
-                                                          self.cell[i][1],
-                                                          'free'))
-                    singles.append(datastruct.Complextype('simple', [1], 'hZ',
-                                                          [i], [None],
-                                                          [[0, 0, 0]],
-                                                          self.cell[i][2],
-                                                          'free'))
+                    singles.append(
+                        datastruct.Complextype(
+                            "simple",
+                            [1],
+                            "hX",
+                            [i],
+                            [None],
+                            [[0, 0, 0]],
+                            self.cell[i][0],
+                            "free",
+                        )
+                    )
+                    singles.append(
+                        datastruct.Complextype(
+                            "simple",
+                            [1],
+                            "hY",
+                            [i],
+                            [None],
+                            [[0, 0, 0]],
+                            self.cell[i][1],
+                            "free",
+                        )
+                    )
+                    singles.append(
+                        datastruct.Complextype(
+                            "simple",
+                            [1],
+                            "hZ",
+                            [i],
+                            [None],
+                            [[0, 0, 0]],
+                            self.cell[i][2],
+                            "free",
+                        )
+                    )
             self.internalcoords += singles
 
         if (len(fragments) > 1 or len(substrate) > 0) and self.fragcoord != 0:
@@ -317,24 +393,25 @@ class Internals:
 
             if self.hlongscale is not None:
                 for i, _ in enumerate(longradii):
-                    if self.atomcounter.keys()[i] == 'H':
+                    if self.atomcounter.keys()[i] == "H":
                         longradii[i] *= self.hlongscale
 
-            longbonds = self.bond_fragments(fragments, substrate, longradii,
-                                            katoms, 'R')
+            longbonds = self.bond_fragments(
+                fragments, substrate, longradii, katoms, "R"
+            )
 
-            log.info('longbonds:')
+            log.info("longbonds:")
             for i, b in enumerate(longbonds):
-                log.info('longbond{}: {}'.format(i, b))
+                log.info("longbond{}: {}".format(i, b))
 
             if self.fragcoord == 2:
                 for j in range(len(longbonds)):
                     longbonds[j].value = 5 / longbonds[j].value
-                    longbonds[j].tag = 'IR1'
+                    longbonds[j].tag = "IR1"
             elif self.fragcoord == 3:
                 for j in range(len(longbonds)):
-                    longbonds[j].value = 2000 / longbonds[j].value**6
-                    longbonds[j].tag = 'IR6'
+                    longbonds[j].value = 2000 / longbonds[j].value ** 6
+                    longbonds[j].tag = "IR6"
 
             for i in range(len(longbonds)):
                 self.internalcoords += [longbonds[i]]
@@ -414,9 +491,9 @@ class Internals:
 
         for i in range(len(self.fractional)):
             if transform[i] == 1:
-                intfractional.append(self.fractional[i] + np.array([first,
-                                                                    second,
-                                                                    third]))
+                intfractional.append(
+                    self.fractional[i] + np.array([first, second, third])
+                )
                 intwhat.append(i)
                 intwhere.append(np.array([first, second, third]))
         return intfractional, intwhat, intwhere
@@ -430,9 +507,9 @@ class Internals:
         return carts
 
     def inter_search(self):
-        '''
+        """
         group of those atoms which can not form intercell bonds
-        '''
+        """
 
         pexcluded = [None, None, None]
         mexcluded = [None, None, None]
@@ -446,10 +523,10 @@ class Internals:
         for i in (-1, 0, 1):
             for j in (-1, 0, 1):
                 for k in (-1, 0, 1):
-                    if (i**2 + j**2 + k**2) != 0:
-                        ifractional, iwhat, iwhere = self.multy_cell(i, j, k,
-                                                                     pexcluded,
-                                                                     mexcluded)
+                    if (i ** 2 + j ** 2 + k ** 2) != 0:
+                        ifractional, iwhat, iwhere = self.multy_cell(
+                            i, j, k, pexcluded, mexcluded
+                        )
                         interfractional = interfractional + ifractional
                         interwhat = interwhat + iwhat
                         interwhere = interwhere + iwhere
@@ -463,7 +540,7 @@ class Internals:
         ibondwhattags = []
         ibondwhere = []
 
-        if (len(fragments) < 2 and len(substrate) == 0):
+        if len(fragments) < 2 and len(substrate) == 0:
             return bonds
 
         for jj in range(len(substrate)):
@@ -478,7 +555,7 @@ class Internals:
                     while fragments[i][ii] >= katoms[target]:
                         target = target + 1
                     radii2_l = radii_l[target]
-                    criteria_l = (radii1_l + radii2_l)
+                    criteria_l = radii1_l + radii2_l
                     b_ = self.fractional[fragments[i][ii]]
                     for t1 in (-1, 0, 1):
                         b = np.zeros(3, dtype=float)
@@ -489,15 +566,17 @@ class Internals:
                                 b[2] = b_[2] + t3
                                 r = b - a
                                 r = np.dot(r, self.cell)
-                                r = sum(r * r)**0.5
+                                r = sum(r * r) ** 0.5
                                 if r <= criteria_l:
                                     ibonds.append(r)
-                                    ibondwhat.append([substrate[jj],
-                                                      fragments[i][ii]])
-                                    ibondwhattags.append([self.symbols[substrate[jj]],
-                                                          self.symbols[fragments[i][ii]]])
-                                    ibondwhere.append([[0, 0, 0],
-                                                      [t1, t2, t3]])
+                                    ibondwhat.append([substrate[jj], fragments[i][ii]])
+                                    ibondwhattags.append(
+                                        [
+                                            self.symbols[substrate[jj]],
+                                            self.symbols[fragments[i][ii]],
+                                        ]
+                                    )
+                                    ibondwhere.append([[0, 0, 0], [t1, t2, t3]])
 
         for i in range(len(fragments)):
             for j in range(len(fragments)):
@@ -514,7 +593,7 @@ class Internals:
                                 while fragments[j][jj] >= katoms[target]:
                                     target = target + 1
                                 radii2_l = radii_l[target]
-                                criteria_l = (radii1_l + radii2_l)
+                                criteria_l = radii1_l + radii2_l
                                 b_ = self.fractional[fragments[j][jj]]
                                 for t1 in (-1, 0, 1):
                                     b = np.zeros(3, dtype=float)
@@ -525,15 +604,21 @@ class Internals:
                                             b[2] = b_[2] + t3
                                             r = b - a
                                             r = np.dot(r, self.cell)
-                                            r = sum(r * r)**0.5
+                                            r = sum(r * r) ** 0.5
                                             if r <= criteria_l:
                                                 ibonds.append(r)
-                                                ibondwhat.append([fragments[i][ii],
-                                                                  fragments[j][jj]])
-                                                ibondwhattags.append([self.symbols[fragments[i][ii]],
-                                                                      self.symbols[fragments[j][jj]]])
-                                                ibondwhere.append([[0, 0, 0],
-                                                                   [t1, t2, t3]])
+                                                ibondwhat.append(
+                                                    [fragments[i][ii], fragments[j][jj]]
+                                                )
+                                                ibondwhattags.append(
+                                                    [
+                                                        self.symbols[fragments[i][ii]],
+                                                        self.symbols[fragments[j][jj]],
+                                                    ]
+                                                )
+                                                ibondwhere.append(
+                                                    [[0, 0, 0], [t1, t2, t3]]
+                                                )
 
         ksort = []
         for i in range(len(ibonds)):
@@ -544,16 +629,22 @@ class Internals:
 
         for i in range(len(ksort)):
             bindex = ksort[i][1]
-            bonds.append(datastruct.Complextype('simple', [1], tag,
-                                                ibondwhat[bindex],
-                                                ibondwhattags[bindex],
-                                                ibondwhere[bindex],
-                                                ibonds[bindex], 'free'))
+            bonds.append(
+                datastruct.Complextype(
+                    "simple",
+                    [1],
+                    tag,
+                    ibondwhat[bindex],
+                    ibondwhattags[bindex],
+                    ibondwhere[bindex],
+                    ibonds[bindex],
+                    "free",
+                )
+            )
 
         return bonds
 
-    def bond_lengths(self, what, where, allcart, allwhat, allwhere, katoms,
-                     tag):
+    def bond_lengths(self, what, where, allcart, allwhat, allwhere, katoms, tag):
         """
         Finds and calculates bond lengths.
         """
@@ -569,21 +660,26 @@ class Internals:
                 length = np.linalg.norm(diffvec)
                 target = 0
                 while what[i] >= katoms[target]:
-                    target = target + 1
+                    target += 1
                 radii1_s = self.short_radii[target]
                 radii1_l = self.long_radii[target]
                 target = 0
                 while allwhat[j] >= katoms[target]:
-                    target = target + 1
+                    target += 1
                 radii2_s = self.short_radii[target]
                 radii2_l = self.long_radii[target]
-                criteria_s = (radii1_s + radii2_s)
-                criteria_l = (radii1_l + radii2_l)
-                if length > criteria_s and length <= criteria_l and what[i] <= allwhat[j]:
+                criteria_s = radii1_s + radii2_s
+                criteria_l = radii1_l + radii2_l
+                if (
+                    length > criteria_s
+                    and length <= criteria_l
+                    and what[i] <= allwhat[j]
+                ):
                     ibonds.append(length)
                     ibondwhat.append([what[i], allwhat[j]])
-                    ibondwhattags.append([self.symbols[what[i]],
-                                          self.symbols[allwhat[j]]])
+                    ibondwhattags.append(
+                        [self.symbols[what[i]], self.symbols[allwhat[j]]]
+                    )
                     ibondwhere.append([where[i], allwhere[j]])
         ksort = []
         for i in range(len(ibonds)):
@@ -591,13 +687,20 @@ class Internals:
             ksort.append(kk)
         ksort.sort()
         bonds = []
-        for i in range(len(ksort)):
-            bindex = ksort[i][1]
-            bonds.append(datastruct.Complextype('simple', [1], tag,
-                                                ibondwhat[bindex],
-                                                ibondwhattags[bindex],
-                                                ibondwhere[bindex],
-                                                ibonds[bindex], 'free'))
+        for item in ksort:
+            bindex = item[1]
+            bonds.append(
+                datastruct.Complextype(
+                    "simple",
+                    [1],
+                    tag,
+                    ibondwhat[bindex],
+                    ibondwhattags[bindex],
+                    ibondwhere[bindex],
+                    ibonds[bindex],
+                    "free",
+                )
+            )
         return bonds
 
     def set_angles(self, bonds, tag):
@@ -638,36 +741,17 @@ class Internals:
                 vectors.append(both)
             for k, _ in enumerate(vectors):
                 for l, _ in enumerate(vectors):
-                    #if l<k:
+                    # if l<k:
                     if l < k and iangwhat[i][k] != i and iangwhat[i][l] != i:
-                    #if l<k and iangwhat[i][k]!=iangwhat[i][l]:   # angles containing one atom twice -this has to be solved
-                        angle = (sum(vectors[k][0] * vectors[l][0])) /\
-                                (vectors[k][1] * vectors[l][1])
-                        if angle > 1:
-                            angle = 1
-                        if angle < -1:
-                            angle = -1
+                        # if l<k and iangwhat[i][k]!=iangwhat[i][l]:   # angles containing one atom twice -this has to be solved
+                        angle = (sum(vectors[k][0] * vectors[l][0])) / (
+                            vectors[k][1] * vectors[l][1]
+                        )
+                        angle = min(angle, 1)
+                        angle = max(angle, -1)
                         angle = abs(acos(angle))
                         # if not(sum(self.topology_matrix[iangwhat[i][k],:])>6 and sum(self.topology_matrix[iangwhat[i][l],:])>6 and sum(self.topology_matrix[i,:])>6):
-                        if sin(angle) > self.trust:
-                            if iangwhat[i][k] < iangwhat[i][l]:
-                                awhat = [iangwhat[i][k], i, iangwhat[i][l]]
-                                awhattags = [self.symbols[iangwhat[i][k]],
-                                             self.symbols[i],
-                                             self.symbols[iangwhat[i][l]]]
-                                awhere = [iangwhere[i][k], [0, 0, 0],
-                                          iangwhere[i][l]]
-                            else:
-                                awhat = [iangwhat[i][l], i, iangwhat[i][k]]
-                                awhattags = [self.symbols[iangwhat[i][l]],
-                                             self.symbols[i],
-                                             self.symbols[iangwhat[i][k]]]
-                                awhere = [iangwhere[i][l], [0, 0, 0],
-                                          iangwhere[i][k]]
-                                angles.append(datastruct.Complextype('simple',
-                                    [1], tag, awhat, awhattags, awhere, angle,
-                                    'free'))
-                        else:
+                        if sin(angle) <= self.trust:
                             continue
                             # awhat=[iangwhat[i][k],iangwhat[i][l]]
                             # awhattags=[self.symbols[iangwhat[i][k]],self.symbols[iangwhat[i][l]]]
@@ -675,62 +759,117 @@ class Internals:
                             # emerbonds.append(datastruct.Complextype('simple',[1],'R',awhat,awhattags,\
                             # awhere,None,'free'))
                             # print 'stretched',i,awhat,awhere
+                        if iangwhat[i][k] < iangwhat[i][l]:
+                            awhat = [iangwhat[i][k], i, iangwhat[i][l]]
+                            awhattags = [
+                                self.symbols[iangwhat[i][k]],
+                                self.symbols[i],
+                                self.symbols[iangwhat[i][l]],
+                            ]
+                            awhere = [iangwhere[i][k], [0, 0, 0], iangwhere[i][l]]
+                        else:
+                            awhat = [iangwhat[i][l], i, iangwhat[i][k]]
+                            awhattags = [
+                                self.symbols[iangwhat[i][l]],
+                                self.symbols[i],
+                                self.symbols[iangwhat[i][k]],
+                            ]
+                            awhere = [iangwhere[i][l], [0, 0, 0], iangwhere[i][k]]
+                            angles.append(
+                                datastruct.Complextype(
+                                    "simple",
+                                    [1],
+                                    tag,
+                                    awhat,
+                                    awhattags,
+                                    awhere,
+                                    angle,
+                                    "free",
+                                )
+                            )
         for i in range(len(emerbonds)):
             indx1 = emerbonds[i].what[0]
             indx2 = emerbonds[i].what[1]
             exitus = 0
             for j in range(i):
-                if emerbonds[i].what[0] == emerbonds[j].what[0] and \
-                        emerbonds[i].what[1] == emerbonds[j].what[1]:
-                    if emerbonds[i].where[0][0] == emerbonds[j].where[0][0] and \
-                            emerbonds[i].where[0][1] == emerbonds[j].where[0][1] and \
-                            emerbonds[i].where[0][2] == emerbonds[j].where[0][2] and \
-                            emerbonds[i].where[1][0] == emerbonds[j].where[1][0] and \
-                            emerbonds[i].where[1][1] == emerbonds[j].where[1][1] and \
-                            emerbonds[i].where[1][2] == emerbonds[j].where[1][2]:
-                        exitus = 1
+                if (
+                    emerbonds[i].what[0] == emerbonds[j].what[0]
+                    and emerbonds[i].what[1] == emerbonds[j].what[1]
+                ) and (
+                    emerbonds[i].where[0][0] == emerbonds[j].where[0][0]
+                    and emerbonds[i].where[0][1] == emerbonds[j].where[0][1]
+                    and emerbonds[i].where[0][2] == emerbonds[j].where[0][2]
+                    and emerbonds[i].where[1][0] == emerbonds[j].where[1][0]
+                    and emerbonds[i].where[1][1] == emerbonds[j].where[1][1]
+                    and emerbonds[i].where[1][2] == emerbonds[j].where[1][2]
+                ):
+                    exitus = 1
             if exitus == 1:
                 continue
             for j in range(len(iangwhat[indx1])):
                 if iangwhat[indx1][j] < indx2:
                     awhat = [iangwhat[indx1][j], indx1, indx2]
-                    awhattags = [self.symbols[iangwhat[indx1][j]],
-                                 self.symbols[indx1],
-                                 self.symbols[indx2]]
-                    awhere = [iangwhere[indx1][j], [0, 0, 0],
-                              emerbonds[i].where[1] - emerbonds[i].where[0]]
+                    awhattags = [
+                        self.symbols[iangwhat[indx1][j]],
+                        self.symbols[indx1],
+                        self.symbols[indx2],
+                    ]
+                    awhere = [
+                        iangwhere[indx1][j],
+                        [0, 0, 0],
+                        emerbonds[i].where[1] - emerbonds[i].where[0],
+                    ]
                 else:
                     awhat = [indx2, indx1, iangwhat[indx1][j]]
-                    awhattags = [self.symbols[indx2],
-                                 self.symbols[indx1],
-                                 self.symbols[iangwhat[indx1][j]]]
-                    awhere = [emerbonds[i].where[1] - emerbonds[i].where[0],
-                              [0, 0, 0], iangwhere[indx1][j]]
+                    awhattags = [
+                        self.symbols[indx2],
+                        self.symbols[indx1],
+                        self.symbols[iangwhat[indx1][j]],
+                    ]
+                    awhere = [
+                        emerbonds[i].where[1] - emerbonds[i].where[0],
+                        [0, 0, 0],
+                        iangwhere[indx1][j],
+                    ]
                 angle = self.calc_angle(awhat, awhere)
                 if sin(angle) > self.trust:
-                    angles.append(datastruct.Complextype('simple', [1], tag,
-                                                         awhat, awhattags,
-                                                         awhere, angle, 'free'))
+                    angles.append(
+                        datastruct.Complextype(
+                            "simple", [1], tag, awhat, awhattags, awhere, angle, "free"
+                        )
+                    )
             for j in range(len(iangwhat[indx2])):
                 if iangwhat[indx2][j] < indx1:
                     awhat = [iangwhat[indx2][j], indx2, indx1]
-                    awhattags = [self.symbols[iangwhat[indx2][j]],
-                                 self.symbols[indx2],
-                                 self.symbols[indx1]]
-                    awhere = [iangwhere[indx2][j], [0, 0, 0],
-                              emerbonds[i].where[0] - emerbonds[i].where[1]]
+                    awhattags = [
+                        self.symbols[iangwhat[indx2][j]],
+                        self.symbols[indx2],
+                        self.symbols[indx1],
+                    ]
+                    awhere = [
+                        iangwhere[indx2][j],
+                        [0, 0, 0],
+                        emerbonds[i].where[0] - emerbonds[i].where[1],
+                    ]
                 else:
                     awhat = [indx1, indx2, iangwhat[indx2][j]]
-                    awhattags = [self.symbols[indx1],
-                                 self.symbols[indx2],
-                                 self.symbols[iangwhat[indx2][j]]]
-                    awhere = [emerbonds[i].where[0] - emerbonds[i].where[1],
-                              [0, 0, 0], iangwhere[indx2][j]]
+                    awhattags = [
+                        self.symbols[indx1],
+                        self.symbols[indx2],
+                        self.symbols[iangwhat[indx2][j]],
+                    ]
+                    awhere = [
+                        emerbonds[i].where[0] - emerbonds[i].where[1],
+                        [0, 0, 0],
+                        iangwhere[indx2][j],
+                    ]
                 angle = self.calc_angle(awhat, awhere)
                 if sin(angle) > self.trust:
-                    angles.append(datastruct.Complextype('simple', [1], tag,
-                                                         awhat, awhattags,
-                                                         awhere, angle, 'free'))
+                    angles.append(
+                        datastruct.Complextype(
+                            "simple", [1], tag, awhat, awhattags, awhere, angle, "free"
+                        )
+                    )
         return angles, iangwhat, iangwhere
 
     def calc_angle(self, awhat, awhere):
@@ -739,7 +878,7 @@ class Internals:
         v1 = np.dot(v1, self.cell)
         v2 = self.fractional[awhat[1]] - (self.fractional[awhat[2]] + awhere[2])
         v2 = np.dot(v2, self.cell)
-        angle = sum(v1 * v2) / (sum(v1**2) * sum(v2**2))**0.5
+        angle = sum(v1 * v2) / (sum(v1 ** 2) * sum(v2 ** 2)) ** 0.5
         if angle > 1:
             angle = 1.0
         if angle < -1:
@@ -760,8 +899,10 @@ class Internals:
                 for j in range(len(iangwhat[i])):
                     firstwhat = iangwhat[i][j]
                     # if (len(self.topmap[secondwhat])>4 and len(self.topmap[firstwhat])>4):continue
-                    if (len(self.topmap[secondwhat]) > self.torsioncrit and
-                            len(self.topmap[firstwhat]) > self.torsioncrit):
+                    if (
+                        len(self.topmap[secondwhat]) > self.torsioncrit
+                        and len(self.topmap[firstwhat]) > self.torsioncrit
+                    ):
                         continue
                     if firstwhat == secondwhat:
                         continue
@@ -773,46 +914,85 @@ class Internals:
                                 continue
                             thirdwhere = iangwhere[i][k]
                             # if len(self.topmap[thirdwhat])>4:continue
-                            if (len(self.topmap[thirdwhat]) > 4 and
-                                    len(self.topmap[firstwhat]) > 4):
+                            if (
+                                len(self.topmap[thirdwhat]) > 4
+                                and len(self.topmap[firstwhat]) > 4
+                            ):
                                 continue
                             for l in range(len(iangwhat[thirdwhat])):
                                 fourthwhat = iangwhat[thirdwhat][l]
-                                if fourthwhat == firstwhat or fourthwhat == secondwhat or fourthwhat == thirdwhat:
+                                if (
+                                    fourthwhat == firstwhat
+                                    or fourthwhat == secondwhat
+                                    or fourthwhat == thirdwhat
+                                ):
                                     continue
                                 fourthwhere = iangwhere[thirdwhat][l] + thirdwhere
-                                itorsion = self.calculate_da(firstwhat,
-                                                             secondwhat,
-                                                             thirdwhat,
-                                                             fourthwhat,
-                                                             firstwhere,
-                                                             thirdwhere,
-                                                             fourthwhere)
+                                itorsion = self.calculate_da(
+                                    firstwhat,
+                                    secondwhat,
+                                    thirdwhat,
+                                    fourthwhat,
+                                    firstwhere,
+                                    thirdwhere,
+                                    fourthwhere,
+                                )
                                 if itorsion is not None:
-                                    torwhat = [firstwhat, secondwhat,
-                                               thirdwhat, fourthwhat]
-                                    torwhattags = [self.symbols[firstwhat],
-                                                   self.symbols[secondwhat],
-                                                   self.symbols[thirdwhat],
-                                                   self.symbols[fourthwhat]]
-                                    torwhere = [firstwhere, secondwhere,
-                                                thirdwhere, fourthwhere]
-                                    torsions.append(datastruct.Complextype(
-                                        'simple', [1], tag, torwhat,
-                                        torwhattags, torwhere, itorsion,
-                                        'free'))
+                                    torwhat = [
+                                        firstwhat,
+                                        secondwhat,
+                                        thirdwhat,
+                                        fourthwhat,
+                                    ]
+                                    torwhattags = [
+                                        self.symbols[firstwhat],
+                                        self.symbols[secondwhat],
+                                        self.symbols[thirdwhat],
+                                        self.symbols[fourthwhat],
+                                    ]
+                                    torwhere = [
+                                        firstwhere,
+                                        secondwhere,
+                                        thirdwhere,
+                                        fourthwhere,
+                                    ]
+                                    torsions.append(
+                                        datastruct.Complextype(
+                                            "simple",
+                                            [1],
+                                            tag,
+                                            torwhat,
+                                            torwhattags,
+                                            torwhere,
+                                            itorsion,
+                                            "free",
+                                        )
+                                    )
         return torsions
 
-    def calculate_da(self, firstwhat, secondwhat, thirdwhat, fourthwhat,
-                     firstwhere, thirdwhere, fourthwhere):
+    def calculate_da(
+        self,
+        firstwhat,
+        secondwhat,
+        thirdwhat,
+        fourthwhat,
+        firstwhere,
+        thirdwhere,
+        fourthwhere,
+    ):
         """
         Calculates dihedral angles.
         """
 
-        if firstwhat == secondwhat or firstwhat == thirdwhat or \
-                firstwhat == fourthwhat or secondwhat == thirdwhat or \
-                secondwhat == fourthwhat or thirdwhat == fourthwhat:
-            return None      # this is provisorium, will be fixed soon!!!
+        if (
+            firstwhat == secondwhat
+            or firstwhat == thirdwhat
+            or firstwhat == fourthwhat
+            or secondwhat == thirdwhat
+            or secondwhat == fourthwhat
+            or thirdwhat == fourthwhat
+        ):
+            return None  # this is provisorium, will be fixed soon!!!
 
         a = self.fractional[firstwhat] + firstwhere
         b = self.fractional[secondwhat]
@@ -865,7 +1045,9 @@ class Internals:
                 dangle = acos(fuck)
                 if sum(cross1 * vector3) >= 0:
                     dangle = -dangle
-                if abs(sin(alph1)) > self.trust and abs(sin(alph2)) > self.trust:  # and abs(sin(dangle))>self.trust:
+                if (
+                    abs(sin(alph1)) > self.trust and abs(sin(alph2)) > self.trust
+                ):  # and abs(sin(dangle))>self.trust:
                     return dangle
             return None
 
@@ -919,7 +1101,7 @@ class Internals:
         fractions = self.find_fragments(fract)
         substrate = []
         if len(fractions) == 1:
-            log.info('ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.')
+            log.info("ONE FRAGMENT (MOLECULE OR SOLID) WAS DETECTED.")
             # identify substrate
             fract = []
             for i in range(len(self.topology_matrix)):
@@ -939,15 +1121,14 @@ class Internals:
                                 if self.topology_matrix_adds[i, j] == 1:
                                     fract[ii].append(j)
                 fractions = self.find_fragments(fract)
-                log.info('SUBSTRATE ATOMS DETECTED: ', substrate)
-                log.info('INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED')
+                log.info("SUBSTRATE ATOMS DETECTED: ", substrate)
+                log.info("INTERMOL. DISTANCES BETWEEN ADD-MOLECULES WILL BE ADDED")
         else:
-            log.info(len(fractions), 'FRAGMENTS DETECTED')
+            log.info(len(fractions), "FRAGMENTS DETECTED")
         return fractions, substrate
 
     def find_fragments(self, fract):
-        """
-        """
+        """ """
 
         fractions = []
         for i in range(len(fract)):
@@ -989,23 +1170,25 @@ class Internals:
 
     @staticmethod
     def read_pickle(fname):
-        'Read internal coordinates from a file'
+        "Read internal coordinates from a file"
 
-        with open(fname, 'rb') as fpkl:
+        with open(fname, "rb") as fpkl:
             internals = pickle.load(fpkl)
         return internals
 
     def to_pickle(self, fname):
-        'Write internal coordinates to a file'
+        "Write internal coordinates to a file"
 
-        with open(fname, 'wb') as fpkl:
+        with open(fname, "wb") as fpkl:
             pickle.dump(self.internalcoords, fpkl)
 
     def to_recarray(self):
-        '''
+        """
         Convert as list of ``datastruct.Complextype`` into numpy record
         array with just the tag and value of the coordinate.
-        '''
+        """
 
-        return np.array([(i.tag, i.value) for i in self.internalcoords],
-                        dtype=[('type', 'S4'), ('value', np.float32)])
+        return np.array(
+            [(i.tag, i.value) for i in self.internalcoords],
+            dtype=[("type", "S4"), ("value", np.float32)],
+        )

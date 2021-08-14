@@ -1,11 +1,9 @@
-
 import numpy as np
 
 
 def give_dist(A, B):
 
-    dist = (sum((A - B)**2))**0.5
-    return dist
+    return (sum((A - B) ** 2)) ** 0.5
 
 
 def shortest_dist(cartesians, lattmat, atom1, atom2):
