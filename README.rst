@@ -1,10 +1,10 @@
-=================
-writeBmat package
-=================
+===============
+bmatrix package
+===============
 
 This package contains tools for generating internal coordiantes and the
 corresponding B matrix [1]_ for molecules as well as for periodic systems. It
-is a part of of the GADGET suite and if you use ``writeBmat`` in a scientific
+is a part of of the GADGET suite and if you use ``bmatrix`` in a scientific
 publication, please cite it as:
 
   Bučko, T., Hafner, J., & Ángyán, J. G. (2005). Geometry optimization of
