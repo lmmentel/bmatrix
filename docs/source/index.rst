@@ -14,7 +14,7 @@ Contents:
    EIGEN_OPT <eigen_opt>
    EIGEN_HESS_ANHARM_INT <eigen_hess_anharm_int>
    Thermo <thermo>
-   writeBmat <writeBmat>
+   B matrix <bmatrix>
 
 
 
