@@ -3,7 +3,11 @@ name = "bmatrix"
 version = "1.0.1"
 description = "Package with tools for generating internal coordiantes and the corresponding B matrix for molecules and for periodic systems."
 authors = ["Lukasz Mentel <lmmentel@gmail.com>", "Tomas Bucko"]
+maintainers = ["Lukasz Mentel <lmmentel@gmail.com>"]
 license = "GNU"
+homepage = "https://github.com/lmmentel/bmatrix"
+repository = "https://github.com/lmmentel/bmatrix"
+keywords = ["coordinates", "internal", "molecules", "geometry", "solids"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
